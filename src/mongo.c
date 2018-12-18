@@ -22,6 +22,6 @@ CData idris_mongoc_client_new_from_uri(const CData uri) {
 }
 
 int idris_mongoc_client_set_appname(const CData client, const char * appname) {
-  int success = mongoc_client_set_appname((mongoc_client_t *) client, appname);
+  int success = mongoc_client_set_appname((mongoc_client_t *) client->data, appname);
   return success;
 }
