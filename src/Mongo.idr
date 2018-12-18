@@ -1,8 +1,10 @@
 module Mongo
 
+import BSon
+
 -- %default total
 %lib C "mongoc-1.0"
-%include C "mongo.c"
+%include C "idris_mongo.c"
 %access export
 
 isCDataPtrNull: CData -> IO Bool
@@ -75,3 +77,13 @@ collection client db name = case client of
     cData <- foreign FFI_C "idris_mongoc_client_get_collection"
       (CData -> String -> String -> IO CData) clientCData db name
     pure $ MkCollection cData
+
+simpleCommand : Client -> String -> BSon -> IO (Maybe BSon)
+simpleCommand client db command = case (client, command) of
+  (MkClient clientCData, MkBSon commandCData) => do
+    reply <- foreign FFI_C "idris_mongoc_client_command_simple"
+      (CData -> String -> CData -> IO CData) clientCData db commandCData
+    failure <- isCDataPtrNull reply
+    case failure of
+      True => pure Nothing
+      False => pure $ Just $ MkBSon reply

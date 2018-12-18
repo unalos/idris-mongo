@@ -1,9 +1,10 @@
 module BSon
 
 %lib C "bson-1.0"
-%include C "bson.c"
+%include C "idris_bson.c"
 %access export
 
+public export
 data BSon = MkBSon CData
 
 init : () -> IO BSon

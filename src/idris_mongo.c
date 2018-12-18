@@ -1,5 +1,6 @@
 #include "idris_rts.h"
 #include <mongoc/mongoc.h>
+#include <idris_bson.h>
 
 int idris_mongoc_init_is_C_data_ptr_null(const CData c_data)
 {
@@ -37,10 +38,11 @@ static void idris_mongoc_database_finalizer(void * database)
   mongoc_database_destroy((mongoc_database_t *) database);
 } 
 
-CData idris_mongoc_client_get_database(const CData client,
+CData idris_mongoc_client_get_database(const CData clientCData,
 				       const char * name)
 {
-  mongoc_database_t * database = mongoc_client_get_database((mongoc_client_t *) client->data, name);
+  mongoc_client_t * client = (mongoc_client_t *) clientCData->data;
+  mongoc_database_t * database = mongoc_client_get_database(client, name);
   return cdata_manage(database, 0, idris_mongoc_database_finalizer);
 }
 
@@ -49,10 +51,25 @@ static void idris_mongoc_collection_finalizer(void * collection) {
 }
 
 CData idris_mongoc_client_get_collection(const CData clientCData,
-					 const char * db,
+					 const char * db_name,
 					 const char * name)
 {
   mongoc_client_t * client = (mongoc_client_t *) clientCData->data;
-  mongoc_collection_t * collection = mongoc_client_get_collection(client, db, name);
+  mongoc_collection_t * collection = mongoc_client_get_collection(client, db_name, name);
   return cdata_manage(collection, 0, idris_mongoc_collection_finalizer);
+}
+
+CData idris_mongoc_client_command_simple(const CData clientCData,
+				       const char * db_name,
+				       const CData commandCData)
+{
+  mongoc_client_t * client = (mongoc_client_t *) clientCData->data;
+  const bson_t * command = (bson_t *) commandCData->data;
+  bson_t * reply = idris_bson_allocate();
+  const int success=mongoc_client_command_simple(client, db_name, command, NULL, reply, NULL);
+  if (!success) {
+    idris_bson_finalize(reply);
+    reply = NULL;
+  }
+  return idris_bson_manage(reply);
 }
