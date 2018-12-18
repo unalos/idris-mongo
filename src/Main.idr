@@ -21,13 +21,21 @@ cleanup () = foreign FFI_C "mongoc_cleanup" (IO ())
 
 data URI = MkURI CData
 
-uriFromString : String -> IO (Maybe URI)
-uriFromString uri_string = do
-  cData <- foreign FFI_C "idris_mongoc_uri_new_with_error" (String -> IO CData) uri_string
+uri : String -> IO (Maybe URI)
+uri uriString = do
+  cData <- foreign FFI_C "idris_mongoc_uri_new_with_error" (String -> IO CData) uriString
   isError <- isCDataPtrNull cData
   pure $ case isError of
     True => Nothing
     False => Just $ MkURI cData
+
+data Client = MkClient CData
+
+client : URI -> IO Client
+client uri = case uri of
+  MkURI uriCData => do
+    cData <- foreign FFI_C "idris_mongoc_client_new_from_uri" (CData -> IO CData) uriCData
+    pure $ MkClient cData
 
 connectionUri : IO String
 connectionUri = do
@@ -39,6 +47,7 @@ main = do
   () <- init ()
   uri_string <- connectionUri
   putStrLn uri_string
-  Just uri <- uriFromString uri_string
+  Just uri <- uri uri_string
   () <- cleanup ()
+  client <- client uri
   pure ()
