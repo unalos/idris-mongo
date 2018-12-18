@@ -8,7 +8,11 @@ module Main
 init : () -> IO ()
 init () = foreign FFI_C "mongoc_init" (IO ())
 
+cleanup : () -> IO ()
+cleanup () = foreign FFI_C "mongoc_cleanup" (IO ())
+
 main : IO ()
 main = do
   () <- init ()
-  putStrLn "exiting"
+  () <- cleanup ()
+  pure ()
