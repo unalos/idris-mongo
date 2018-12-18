@@ -24,7 +24,12 @@ CData idris_bson_init()
 
 void idris_bson_append_int32(const CData bson, const char * key, const int32_t value)
 {
-  bson_append_int32((bson_t *)bson->data, key, -1, value);
+  bson_append_int32((bson_t *) bson->data, key, -1, value);
+}
+
+void idris_bson_append_utf8(const CData bson, const char * key, const char * value)
+{
+  bson_append_utf8((bson_t *) bson->data, key, -1, value, -1);
 }
 
 const char * idris_bson_as_canonical_extended_json(const CData bson)
