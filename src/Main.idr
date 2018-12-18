@@ -8,8 +8,8 @@ connectionUri = do
   [_, uri] <- getArgs
   pure uri
 
-ping : IO BSon
-ping = do
+pingDocument : IO BSon
+pingDocument = do
   bSon <- BSon.init ()
   () <- appendInt32 bSon "ping" 1
   pure bSon
@@ -20,19 +20,32 @@ document = do
   () <- appendUTF8 bSon "hello" "world"
   pure bSon
 
-main : IO ()
-main = do
-  () <- Mongo.init ()
+getClient : () -> IO Client
+getClient () = do
   uri_string <- connectionUri
   Just uri <- uri uri_string
-  () <- cleanup ()
   Just client <- client uri "connect-example"
-  database <- database client "db_name"
-  collection <- collection client "db_name" "coll_name"
-  command <- ping
+  pure client
+
+ping : Client -> IO ()
+ping client = do
+  command <- pingDocument
   Just reply <- simpleCommand client "admin" command
   replyJSon <- canonicalExtendedJSon reply
   putStrLn replyJSon
+
+insert : Collection -> IO ()
+insert collection = do
   documentToInsert <- document
   Just () <- insertOne collection documentToInsert
+  pure ()
+
+main : IO ()
+main = do
+  () <- Mongo.init ()
+  client <- getClient ()
+  database <- database client "db_name"
+  collection <- collection client "db_name" "coll_name"
+  () <- ping client
+  () <- insert collection
   cleanup ()
