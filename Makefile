@@ -6,4 +6,3 @@ all:
 
 clean:
 	idris --clean idris-mongo.ipkg
-	rm -f src/*.ibc
