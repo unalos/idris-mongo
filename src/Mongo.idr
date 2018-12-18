@@ -36,11 +36,10 @@ data Client = MkClient CData
 
 private
 mkClient : URI -> IO Client
-mkClient uri = case uri of
-  MkURI uriCData => do
-    cData <- foreign FFI_C "idris_mongoc_client_new_from_uri"
-      (CData -> IO CData) uriCData
-    pure $ MkClient cData
+mkClient (MkURI uri) = do
+  clientCData <- foreign FFI_C "idris_mongoc_client_new_from_uri"
+    (CData -> IO CData) uri
+  pure $ MkClient clientCData
 
 private
 clientSetAppName : Client -> String -> IO (Maybe ())
