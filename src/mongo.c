@@ -25,3 +25,12 @@ int idris_mongoc_client_set_appname(const CData client, const char * appname) {
   int success = mongoc_client_set_appname((mongoc_client_t *) client->data, appname);
   return success;
 }
+
+static void idris_mongoc_database_finalizer(void * database) {
+  mongoc_database_destroy((mongoc_database_t *) database);
+} 
+
+CData idris_mongoc_client_get_database(const CData client, const char * name) {
+  mongoc_database_t * database = mongoc_client_get_database((mongoc_client_t *) client->data, name);
+  return cdata_manage(database, 0, idris_mongoc_database_finalizer);
+}
