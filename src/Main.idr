@@ -66,6 +66,15 @@ database client name = case client of
       (CData -> String -> IO CData) clientCData name
     pure $ MkDataBase cData
 
+data Collection = MkCollection CData
+
+collection : Client -> String -> String -> IO Collection
+collection client db name = case client of
+  MkClient clientCData => do
+    cData <- foreign FFI_C "idris_mongoc_client_get_collection"
+      (CData -> String -> String -> IO CData) clientCData db name
+    pure $ MkCollection cData
+
 connectionUri : IO String
 connectionUri = do
   [_, uri] <- getArgs
@@ -80,4 +89,5 @@ main = do
   () <- cleanup ()
   Just client <- client uri "connect-example"
   database <- database client "db_name"
+  collection <- collection client "db_name" "coll_name"
   pure ()
