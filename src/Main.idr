@@ -9,9 +9,9 @@ module Main
 isCDataPtrNull: CData -> IO Bool
 isCDataPtrNull cData = do
   code <- foreign FFI_C "idris_mongoc_init_is_C_data_ptr_null" (CData -> IO Int) cData
-  pure $ case code of
-    0 => False
-    _ => True
+  case code of
+    0 => pure False
+    _ => pure True
 
 init : () -> IO ()
 init () = foreign FFI_C "mongoc_init" (IO ())
@@ -31,11 +31,27 @@ uri uriString = do
 
 data Client = MkClient CData
 
-client : URI -> IO Client
-client uri = case uri of
+mkClient : URI -> IO Client
+mkClient uri = case uri of
   MkURI uriCData => do
     cData <- foreign FFI_C "idris_mongoc_client_new_from_uri" (CData -> IO CData) uriCData
     pure $ MkClient cData
+
+clientSetAppName : Client -> String -> IO (Maybe ())
+clientSetAppName (MkClient client) appName = do
+  successCode <-
+    foreign FFI_C "idris_mongoc_client_set_appname" (CData -> String -> IO Int) client appName
+  case successCode of
+    0 => pure Nothing
+    _ => pure $ Just ()
+
+client : URI -> String -> IO (Maybe Client)
+client uri appName = do
+  client' <- mkClient uri
+  success <- clientSetAppName client' appName
+  case success of
+    Nothing => pure Nothing
+    Just () => pure $ Just client'
 
 connectionUri : IO String
 connectionUri = do
@@ -49,5 +65,5 @@ main = do
   putStrLn uri_string
   Just uri <- uri uri_string
   () <- cleanup ()
-  client <- client uri
+  client <- client uri "connect-example"
   pure ()
