@@ -79,11 +79,10 @@ database (MkClient clientCData) name = do
 data Collection = MkCollection CData
 
 collection : Client -> String -> String -> IO Collection
-collection client db name = case client of
-  MkClient clientCData => do
-    cData <- foreign FFI_C "idris_mongoc_client_get_collection"
-      (CData -> String -> String -> IO CData) clientCData db name
-    pure $ MkCollection cData
+collection (MkClient clientCData) db name = do
+  cData <- foreign FFI_C "idris_mongoc_client_get_collection"
+    (CData -> String -> String -> IO CData) clientCData db name
+  pure $ MkCollection cData
 
 insertOne : Collection -> BSon -> IO (Maybe ())
 insertOne (MkCollection collection) (MkBSon document) = do
