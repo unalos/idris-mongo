@@ -60,6 +60,15 @@ client uri appName = do
     Nothing => pure Nothing
     Just () => pure $ Just client'
 
+simpleCommand : Client -> String -> BSon -> IO (Maybe BSon)
+simpleCommand (MkClient client) db (MkBSon command) = do
+  reply <- foreign FFI_C "idris_mongoc_client_command_simple"
+    (CData -> String -> CData -> IO CData) client db command
+  failure <- isCDataPtrNull reply
+  case failure of
+    True => pure Nothing
+    False => pure $ Just $ MkBSon reply
+
 data DataBase = MkDataBase CData
 
 database : Client -> String -> IO DataBase
@@ -78,12 +87,10 @@ collection client db name = case client of
       (CData -> String -> String -> IO CData) clientCData db name
     pure $ MkCollection cData
 
-simpleCommand : Client -> String -> BSon -> IO (Maybe BSon)
-simpleCommand client db command = case (client, command) of
-  (MkClient clientCData, MkBSon commandCData) => do
-    reply <- foreign FFI_C "idris_mongoc_client_command_simple"
-      (CData -> String -> CData -> IO CData) clientCData db commandCData
-    failure <- isCDataPtrNull reply
-    case failure of
-      True => pure Nothing
-      False => pure $ Just $ MkBSon reply
+insertOne : Collection -> BSon -> IO (Maybe ())
+insertOne (MkCollection collection) (MkBSon document) = do
+  success <- foreign FFI_C "idris_mongoc_collection_insert_one"
+    (CData -> CData -> IO Int) collection document
+  case success of
+    0 => pure Nothing
+    _ => pure $ Just ()

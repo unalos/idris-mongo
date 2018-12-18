@@ -66,10 +66,17 @@ CData idris_mongoc_client_command_simple(const CData clientCData,
   mongoc_client_t * client = (mongoc_client_t *) clientCData->data;
   const bson_t * command = (bson_t *) commandCData->data;
   bson_t * reply = idris_bson_allocate();
-  const int success=mongoc_client_command_simple(client, db_name, command, NULL, reply, NULL);
+  const int success = mongoc_client_command_simple(client, db_name, command, NULL, reply, NULL);
   if (!success) {
     idris_bson_finalize(reply);
     reply = NULL;
   }
   return idris_bson_manage(reply);
+}
+
+const bool idris_mongoc_collection_insert_one(const CData collectionCData,
+					     const CData documentCData) {
+  mongoc_collection_t * collection = (mongoc_collection_t *) collectionCData->data;
+  bson_t * document = (bson_t *) documentCData->data;
+  return mongoc_collection_insert_one(collection, document, NULL, NULL, NULL);
 }

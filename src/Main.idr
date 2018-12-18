@@ -27,6 +27,7 @@ main = do
   Just reply <- simpleCommand client "admin" command
   replyJSon <- canonicalExtendedJSon reply
   putStrLn replyJSon
-  bSon <- BSon.init ()
-  () <- appendUTF8 bSon "hello" "world"
+  document <- BSon.init ()
+  () <- appendUTF8 document "hello" "world"
+  Just () <- insertOne collection document  
   pure ()
