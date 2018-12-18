@@ -14,6 +14,12 @@ ping = do
   () <- appendInt32 bSon "ping" 1
   pure bSon
 
+document : IO BSon
+document = do
+  bSon <- BSon.init ()
+  () <- appendUTF8 bSon "hello" "world"
+  pure bSon
+
 main : IO ()
 main = do
   () <- Mongo.init ()
@@ -27,7 +33,6 @@ main = do
   Just reply <- simpleCommand client "admin" command
   replyJSon <- canonicalExtendedJSon reply
   putStrLn replyJSon
-  document <- BSon.init ()
-  () <- appendUTF8 document "hello" "world"
-  Just () <- insertOne collection document  
+  documentToInsert <- document
+  Just () <- insertOne collection documentToInsert  
   pure ()
