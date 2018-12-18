@@ -16,3 +16,7 @@ appendInt32 : BSon -> String -> Bits32 -> IO ()
 appendInt32 bSon key value = case bSon of
   MkBSon bSonCData => foreign FFI_C "idris_bson_append_int32"
     (CData -> String -> Bits32 -> IO ()) bSonCData key value
+
+canonicalExtendedJSon : BSon -> IO String
+canonicalExtendedJSon (MkBSon bson) =
+  foreign FFI_C "idris_bson_as_canonical_extended_json" (CData -> IO String) bson

@@ -26,3 +26,8 @@ void idris_bson_append_int32(const CData bson, const char * key, const int32_t v
 {
   bson_append_int32((bson_t *)bson->data, key, -1, value);
 }
+
+const char * idris_bson_as_canonical_extended_json(const CData bson)
+{
+  return bson_as_canonical_extended_json((bson_t *) bson->data, NULL);
+}
