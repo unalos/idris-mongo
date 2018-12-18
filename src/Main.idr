@@ -34,5 +34,5 @@ main = do
   replyJSon <- canonicalExtendedJSon reply
   putStrLn replyJSon
   documentToInsert <- document
-  Just () <- insertOne collection documentToInsert  
+  Just () <- insertOne collection documentToInsert
   pure ()
