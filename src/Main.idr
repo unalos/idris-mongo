@@ -19,4 +19,5 @@ main = do
   database <- database client "db_name"
   collection <- collection client "db_name" "coll_name"
   bSon <- BSon.init ()
+  () <- appendInt32 bSon "ping" 1
   pure ()
