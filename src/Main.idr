@@ -35,4 +35,4 @@ main = do
   putStrLn replyJSon
   documentToInsert <- document
   Just () <- insertOne collection documentToInsert
-  pure ()
+  cleanup ()
