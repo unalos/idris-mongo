@@ -1,7 +1,5 @@
 package idris-mongo
 
---opts = "-S"
-
 sourcedir  = src
 executable = idrisMongo.bin
 main       = Main
