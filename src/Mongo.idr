@@ -71,11 +71,10 @@ simpleCommand (MkClient client) db (MkBSon command) = do
 data DataBase = MkDataBase CData
 
 database : Client -> String -> IO DataBase
-database client name = case client of
-  MkClient clientCData => do
-    cData <- foreign FFI_C "idris_mongoc_client_get_database"
-      (CData -> String -> IO CData) clientCData name
-    pure $ MkDataBase cData
+database (MkClient clientCData) name = do
+  cData <- foreign FFI_C "idris_mongoc_client_get_database"
+    (CData -> String -> IO CData) clientCData name
+  pure $ MkDataBase cData
 
 data Collection = MkCollection CData
 
