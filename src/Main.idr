@@ -1,6 +1,7 @@
 module Main
 
 import BSon
+import ISon
 import Mongo
 
 connectionUri : IO String
@@ -8,17 +9,11 @@ connectionUri = do
   [_, uri] <- getArgs
   pure uri
 
-pingDocument : IO BSon
-pingDocument = do
-  bSon <- BSon.init ()
-  () <- appendInt32 bSon "ping" 1
-  pure bSon
+pingCommand : Document
+pingCommand = MkDocument [("ping", Bits32Value 1)]
 
-document : IO BSon
-document = do
-  bSon <- BSon.init ()
-  () <- appendUTF8 bSon "hello" "world"
-  pure bSon
+document : Document
+document = MkDocument [("hello", UTF8Value "world")]
 
 getClient : () -> IO Client
 getClient () = do
@@ -29,15 +24,13 @@ getClient () = do
 
 ping : Client -> IO ()
 ping client = do
-  command <- pingDocument
-  Just reply <- simpleCommand client "admin" command
+  Just reply <- simpleCommand client "admin" pingCommand
   replyJSon <- canonicalExtendedJSon reply
   putStrLn replyJSon
 
 insert : Collection -> IO ()
 insert collection = do
-  documentToInsert <- document
-  Just () <- insertOne collection documentToInsert
+  Just () <- insertOne collection document
   pure ()
 
 main : IO ()

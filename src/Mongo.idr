@@ -1,8 +1,8 @@
 module Mongo
 
 import BSon
+import ISon
 
--- %default total
 %lib C "mongoc-1.0"
 %include C "idris_mongo.c"
 %access export
@@ -59,10 +59,11 @@ client uri appName = do
     Nothing => pure Nothing
     Just () => pure $ Just client'
 
-simpleCommand : Client -> String -> BSon -> IO (Maybe BSon)
-simpleCommand (MkClient client) db (MkBSon command) = do
+simpleCommand : Client -> String -> Document -> IO (Maybe BSon)
+simpleCommand (MkClient client) db command = do
+  MkBSon bSonCommand <- bSon command
   reply <- foreign FFI_C "idris_mongoc_client_command_simple"
-    (CData -> String -> CData -> IO CData) client db command
+    (CData -> String -> CData -> IO CData) client db bSonCommand
   failure <- isCDataPtrNull reply
   case failure of
     True => pure Nothing
@@ -84,10 +85,11 @@ collection (MkClient clientCData) db name = do
     (CData -> String -> String -> IO CData) clientCData db name
   pure $ MkCollection cData
 
-insertOne : Collection -> BSon -> IO (Maybe ())
-insertOne (MkCollection collection) (MkBSon document) = do
+insertOne : Collection -> Document -> IO (Maybe ())
+insertOne (MkCollection collection) document = do
+  MkBSon bSonDocument <- bSon document
   success <- foreign FFI_C "idris_mongoc_collection_insert_one"
-    (CData -> CData -> IO Int) collection document
+    (CData -> CData -> IO Int) collection bSonDocument
   case success of
     0 => pure Nothing
     _ => pure $ Just ()
