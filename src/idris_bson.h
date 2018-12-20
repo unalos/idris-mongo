@@ -4,4 +4,4 @@ void idris_bson_finalize(void * bson);
 
 bson_t * idris_bson_allocate();
 
-CData idris_bson_manage(bson_t * bson);
+const CData idris_bson_manage(bson_t * bson);

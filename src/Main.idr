@@ -10,7 +10,7 @@ connectionUri = do
   pure uri
 
 pingCommand : Document
-pingCommand = MkDocument [("ping", Bits32Value 1)]
+pingCommand = MkDocument [("ping", Int32Value 1)]
 
 document : Document
 document = MkDocument [("hello", UTF8Value "world")]
@@ -28,8 +28,21 @@ ping client = do
   replyJSon <- canonicalExtendedJSon reply
   putStrLn replyJSon
 
+print : Document -> IO ()
+print document =
+  do bSon <- bSon document
+     action <- fold aux (pure ()) bSon
+     action
+  where
+    aux : IO () -> String -> Value -> IO ()
+    aux accu key value = do
+      () <- accu
+      putStrLn key
+      putStrLn (show value)
+
 insert : Collection -> IO ()
 insert collection = do
+  () <- print document
   Just () <- insertOne collection document
   pure ()
 
