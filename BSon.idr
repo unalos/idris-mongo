@@ -21,8 +21,12 @@ appendUTF8 (MkBSon bSon) key value =
   foreign FFI_C "idris_bson_append_utf8" (CData -> String -> String -> IO ()) bSon key value
 
 canonicalExtendedJSon : BSon -> IO String
-canonicalExtendedJSon (MkBSon bson) =
-  foreign FFI_C "idris_bson_as_canonical_extended_json" (CData -> IO String) bson
+canonicalExtendedJSon (MkBSon bSon) =
+  foreign FFI_C "idris_bson_as_canonical_extended_json" (CData -> IO String) bSon
+
+relaxedExtendedJSon : BSon -> IO String
+relaxedExtendedJSon (MkBSon bSon) =
+  foreign FFI_C "idris_bson_as_relaxed_extended_json" (CData -> IO String) bSon
 
 private
 data Iterator = MkIterator CData

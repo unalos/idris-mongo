@@ -18,8 +18,8 @@ isCDataPtrNull cData = do
 init : () -> IO ()
 init () = foreign FFI_C "mongoc_init" (IO ())
 
-cleanup : () -> IO ()
-cleanup () = foreign FFI_C "mongoc_cleanup" (IO ())
+cleanUp : () -> IO ()
+cleanUp () = foreign FFI_C "mongoc_cleanup" (IO ())
 
 data URI = MkURI CData
 
@@ -71,8 +71,8 @@ simpleCommand (MkClient client) db command = do
 
 data DataBase = MkDataBase CData
 
-database : Client -> String -> IO DataBase
-database (MkClient clientCData) name = do
+dataBase : Client -> String -> IO DataBase
+dataBase (MkClient clientCData) name = do
   cData <- foreign FFI_C "idris_mongoc_client_get_database"
     (CData -> String -> IO CData) clientCData name
   pure $ MkDataBase cData

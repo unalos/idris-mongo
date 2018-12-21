@@ -34,7 +34,12 @@ void idris_bson_append_utf8(const CData bson, const char * key, const char * val
 
 const char * idris_bson_as_canonical_extended_json(const CData bson)
 {
-  return bson_as_canonical_extended_json((bson_t *) bson->data, NULL);
+  return bson_as_canonical_extended_json((const bson_t *) bson->data, NULL);
+}
+
+const char * idris_bson_as_relaxed_extended_json(const CData bson)
+{
+  return bson_as_relaxed_extended_json((const bson_t *) bson->data, NULL);
 }
 
 bson_iter_t * idris_bson_iter_allocate()

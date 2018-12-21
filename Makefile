@@ -17,4 +17,4 @@ install:
 
 clean:
 	$(IDRIS) --clean $(IDRIS_PKG)
-	rm -f *.ibc
+	find . -name '*.ibc' | xargs rm -f
