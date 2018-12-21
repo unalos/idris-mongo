@@ -77,20 +77,24 @@ iterInt32 (MkIterator iterator) =
   foreign FFI_C "idris_bson_iter_int32" (CData -> IO Bits32) iterator
 
 private
+cond : List (Lazy Bool, Lazy a) -> a -> a
+cond [] def = def
+cond ((x, y) :: xs) def = if x then y else cond xs def
+
+private
 iterValue : Iterator -> IO Value
 iterValue iterator = do
   typeCode <- iterType iterator
   utf8 <- typeUTF8
   int32 <- typeInt32
-  if typeCode == utf8
-  then
-    do utf8Value <- iterUTF8 iterator
-       pure $ UTF8Value utf8Value
-  else if typeCode == int32
-  then
-    do int32Value <- iterInt32 iterator
-       pure $ Int32Value int32Value
-  else pure OtherValue
+  cond [
+    (typeCode == utf8, do
+      utf8Value <- iterUTF8 iterator
+      pure $ UTF8Value utf8Value),
+    (typeCode == int32, do
+      int32Value <- iterInt32 iterator
+      pure $ Int32Value int32Value)
+  ] (pure OtherValue)
 
 fold : (acc -> String -> Value -> acc) -> acc -> BSon -> IO acc
 fold func init bSon =
