@@ -1,0 +1,8 @@
+package mongo
+
+modules = BSon, ISon, Mongo, Tests
+objs = idris_bson.c, idris_bson.h, idris_mongo.c
+
+tests = Tests.test1
+      , Tests.test2
+      ,	Tests.test3

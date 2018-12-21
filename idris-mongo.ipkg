@@ -1,4 +1,0 @@
-package idrisMongo
-
-executable = idrisMongo
-main       = Main
