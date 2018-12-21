@@ -1,5 +1,4 @@
 package idrisMongo
 
-sourcedir  = src
 executable = idrisMongo.bin
 main       = Main
