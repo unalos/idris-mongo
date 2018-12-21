@@ -1,4 +1,4 @@
 package idrisMongo
 
-executable = idrisMongo.bin
+executable = idrisMongo
 main       = Main
