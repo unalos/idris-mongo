@@ -1,3 +1,4 @@
+#include "idris_rts.h"
 #include <bson/bson.h>
 
 bson_t * idris_bson_allocate()
