@@ -26,8 +26,9 @@ canonicalExtendedJSon (MkBSon bSon) = do
   pure jSon
 
 relaxedExtendedJSon : BSon -> IO String
-relaxedExtendedJSon (MkBSon bSon) =
-  foreign FFI_C "idris_bson_as_relaxed_extended_json" (CData -> IO String) bSon
+relaxedExtendedJSon (MkBSon bSon) = do
+  MkRaw jSon <- foreign FFI_C "idris_bson_as_relaxed_extended_json" (CData -> IO (Raw String)) bSon
+  pure jSon
 
 private
 data Iterator = MkIterator CData

@@ -42,9 +42,13 @@ const VAL idris_bson_as_canonical_extended_json(const CData bson)
   return raw_json;
 }
 
-const char * idris_bson_as_relaxed_extended_json(const CData bson)
+const VAL idris_bson_as_relaxed_extended_json(const CData bson)
 {
-  return bson_as_relaxed_extended_json((const bson_t *) bson->data, NULL);
+  size_t length;
+  char * json = bson_as_relaxed_extended_json((const bson_t *) bson->data, &length);
+  const VAL raw_json = MKSTRlen(get_vm(), json, length);
+  bson_free(json);
+  return raw_json;
 }
 
 bson_iter_t * idris_bson_iter_allocate()
