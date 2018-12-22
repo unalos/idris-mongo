@@ -33,9 +33,12 @@ void idris_bson_append_utf8(const CData bson, const char * key, const char * val
   bson_append_utf8((bson_t *) bson->data, key, -1, value, -1);
 }
 
-const char * idris_bson_as_canonical_extended_json(const CData bson)
+const VAL idris_bson_as_canonical_extended_json(const CData bson)
 {
-  return bson_as_canonical_extended_json((const bson_t *) bson->data, NULL);
+  char * json = bson_as_canonical_extended_json((const bson_t *) bson->data, NULL);
+  const VAL raw_json = MKSTR(get_vm(), json);
+  bson_free(json);
+  return raw_json;
 }
 
 const char * idris_bson_as_relaxed_extended_json(const CData bson)
