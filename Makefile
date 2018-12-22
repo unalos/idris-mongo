@@ -1,5 +1,4 @@
 IDRIS=idris
-IDRIS_CFLAGS=$(shell pkg-config --cflags libmongoc-1.0)
 IDRIS_PKG=mongo.ipkg
 
 export IDRIS_CFLAGS

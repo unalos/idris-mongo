@@ -4,7 +4,8 @@ import BSon
 import ISon
 
 %lib C "mongoc-1.0"
-%include C "idris_mongo.c"
+%link C "idris_mongo.o"
+%include C "idris_mongo.h"
 %access export
 
 isCDataPtrNull: CData -> IO Bool
@@ -16,10 +17,10 @@ isCDataPtrNull cData = do
     _ => pure True
 
 init : () -> IO ()
-init () = foreign FFI_C "mongoc_init" (IO ())
+init () = foreign FFI_C "idris_mongoc_init" (IO ())
 
 cleanUp : () -> IO ()
-cleanUp () = foreign FFI_C "mongoc_cleanup" (IO ())
+cleanUp () = foreign FFI_C "idris_mongoc_cleanup" (IO ())
 
 data URI = MkURI CData
 

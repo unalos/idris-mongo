@@ -1,10 +1,20 @@
 #include "idris_rts.h"
 #include <mongoc/mongoc.h>
-#include <idris_bson.h>
+#include "idris_bson_manage.h"
 
 int idris_mongoc_is_C_data_ptr_null(const CData c_data)
 {
   return (int) (NULL == c_data->data);
+}
+
+void idris_mongoc_init()
+{
+  mongoc_init();
+}
+
+void idris_mongoc_cleanup()
+{
+  mongoc_cleanup();
 }
 
 static void idris_mongoc_uri_finalizer(void * uri) {}
@@ -75,7 +85,8 @@ CData idris_mongoc_client_command_simple(const CData clientCData,
 }
 
 const bool idris_mongoc_collection_insert_one(const CData collectionCData,
-					     const CData documentCData) {
+					     const CData documentCData)
+{
   mongoc_collection_t * collection = (mongoc_collection_t *) collectionCData->data;
   bson_t * document = (bson_t *) documentCData->data;
   return mongoc_collection_insert_one(collection, document, NULL, NULL, NULL);

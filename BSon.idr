@@ -1,7 +1,8 @@
 module BSon
 
 %lib C "bson-1.0"
-%include C "idris_bson.c"
+%link C "idris_bson.o"
+%include C "idris_bson.h"
 %access export
 
 public export
