@@ -98,9 +98,12 @@ const int idris_bson_type_int32()
   return (int) BSON_TYPE_INT32;
 }
 
-const char * idris_bson_iter_utf8(const CData iter)
+const VAL idris_bson_iter_utf8(const CData iter)
 {
-  return bson_iter_utf8((const bson_iter_t *) iter->data, NULL);
+  uint32_t length;
+  const char * utf8 = bson_iter_utf8((const bson_iter_t *) iter->data, &length);
+  const VAL raw_utf8 = MKSTRlen(get_vm(), utf8, length);
+  return raw_utf8;
 }
 
 const int idris_bson_iter_int32(const CData iter)

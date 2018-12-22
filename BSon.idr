@@ -74,8 +74,9 @@ Show Value where
 
 private
 iterUTF8 : Iterator -> IO String
-iterUTF8 (MkIterator iterator) =
-  foreign FFI_C "idris_bson_iter_utf8" (CData -> IO String) iterator
+iterUTF8 (MkIterator iterator) = do
+  MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8" (CData -> IO (Raw String)) iterator
+  pure utf8
 
 private
 iterInt32 : Iterator -> IO Bits32
