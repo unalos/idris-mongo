@@ -64,7 +64,7 @@ private
 printDocument : Document -> IO ()
 printDocument document =
   do bSon <- bSon document
-     action <- fold aux (pure ()) bSon
+     Just action <- fold aux (pure ()) bSon
      action
   where
     aux : IO () -> String -> Value -> IO ()

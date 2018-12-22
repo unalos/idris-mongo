@@ -66,7 +66,6 @@ public export
 data Value : Type where
   UTF8Value  : String -> Value
   Int32Value : Bits32 -> Value
-  OtherValue : Value
 
 Show Value where
   show (UTF8Value string) = show string
@@ -79,6 +78,14 @@ iterUTF8 (MkIterator iterator) = do
   pure utf8
 
 private
+UTF8Validate : String -> IO (Maybe ())
+UTF8Validate string = do
+  success <- foreign FFI_C "idris_bson_utf8_validate" (String -> IO Int) string
+  case success of
+    0 => pure Nothing
+    1 => pure $ Just ()
+
+private
 iterInt32 : Iterator -> IO Bits32
 iterInt32 (MkIterator iterator) =
   foreign FFI_C "idris_bson_iter_int32" (CData -> IO Bits32) iterator
@@ -89,7 +96,7 @@ cond [] def = def
 cond ((x, y) :: xs) def = if x then y else cond xs def
 
 private
-iterValue : Iterator -> IO Value
+iterValue : Iterator -> IO (Maybe Value)
 iterValue iterator = do
   typeCode <- iterType iterator
   utf8 <- typeUTF8
@@ -97,23 +104,25 @@ iterValue iterator = do
   cond [
     (typeCode == utf8, do
       utf8Value <- iterUTF8 iterator
-      pure $ UTF8Value utf8Value),
+      Just () <- UTF8Validate utf8Value
+        | Nothing => pure Nothing
+      pure $ Just (UTF8Value utf8Value)),
     (typeCode == int32, do
       int32Value <- iterInt32 iterator
-      pure $ Int32Value int32Value)
-  ] (pure OtherValue)
+      pure $ Just (Int32Value int32Value))
+  ] (pure Nothing)
 
-fold : (acc -> String -> Value -> acc) -> acc -> BSon -> IO acc
+fold : (acc -> String -> Value -> acc) -> acc -> BSon -> IO (Maybe acc)
 fold func init bSon =
   do iterator <- iterInit bSon
      aux iterator init
   where
-    aux : Iterator -> acc -> IO acc
+    aux : Iterator -> acc -> IO (Maybe acc)
     aux iterator acc = do
       code <- iterNext iterator
       case code of
-        0 => pure acc
+        0 => pure $ Just acc
         _ => do
           key <- iterKey iterator
-          value <- iterValue iterator
+          Just value <- iterValue iterator
           aux iterator (func acc key value)

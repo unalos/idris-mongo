@@ -106,6 +106,11 @@ const VAL idris_bson_iter_utf8(const CData iter)
   return raw_utf8;
 }
 
+const bool idris_bson_utf8_validate(const char * utf8)
+{
+  return bson_utf8_validate(utf8, strlen(utf8) ,false);
+}
+
 const int idris_bson_iter_int32(const CData iter)
 {
   return bson_iter_int32((const bson_iter_t *) iter->data);
