@@ -2,7 +2,7 @@
 #include <mongoc/mongoc.h>
 #include <idris_bson.h>
 
-int idris_mongoc_init_is_C_data_ptr_null(const CData c_data)
+int idris_mongoc_is_C_data_ptr_null(const CData c_data)
 {
   return (int) (NULL == c_data->data);
 }

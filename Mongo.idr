@@ -9,7 +9,7 @@ import ISon
 
 isCDataPtrNull: CData -> IO Bool
 isCDataPtrNull cData = do
-  code <- foreign FFI_C "idris_mongoc_init_is_C_data_ptr_null"
+  code <- foreign FFI_C "idris_mongoc_is_C_data_ptr_null"
     (CData -> IO Int) cData
   case code of
     0 => pure False
