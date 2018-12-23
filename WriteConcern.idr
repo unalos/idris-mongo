@@ -14,6 +14,11 @@ WriteConcern = CData
 writeConcern : () -> IO WriteConcern
 writeConcern () = foreign FFI_C "idris_mongoc_write_concern_new" (IO CData)
 
+setWMajority : WriteConcern -> IO ()
+setWMajority writeConcern =
+  foreign FFI_C "idris_mongoc_write_concern_set_wmajority"
+    (CData -> IO ()) writeConcern
+
 append : BSon -> WriteConcern -> IO (Maybe ())
 append (MkBSon command) writeConcern = do
   success <- foreign FFI_C "idris_mongoc_write_concern_append"
