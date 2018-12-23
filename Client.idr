@@ -49,6 +49,16 @@ simpleCommand (MkClient client) db command = do
     True => pure Nothing
     False => pure $ Just $ MkBSon reply
 
+writeCommand : Client -> String -> Document -> BSon -> IO (Maybe BSon)
+writeCommand (MkClient client) db command (MkBSon options) = do
+  MkBSon bSonCommand <- bSon command
+  reply <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
+    (CData -> String -> CData -> CData -> IO CData) client db bSonCommand options
+  failure <- isCDataPtrNull reply
+  case failure of
+    True => pure Nothing
+    False => pure $ Just $ MkBSon reply
+
 data DataBase = MkDataBase CData
 
 dataBase : Client -> String -> IO DataBase
