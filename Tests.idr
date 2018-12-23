@@ -24,14 +24,14 @@ document = MkDocument [("hello", UTF8Value "world")]
 
 testRelaxedJSon : IO ()
 testRelaxedJSon = do
-  bSon <- bSon document
+  Just bSon <- bSon document
   jSon <- relaxedExtendedJSon bSon
   let True = jSon == "{ \"hello\" : \"world\" }"
   pure ()
 
 testCanonicalJSon : IO ()
 testCanonicalJSon = do
-  bSon <- bSon document
+  Just bSon <- bSon document
   jSon <- canonicalExtendedJSon bSon
   let True = jSon == "{ \"hello\" : \"world\" }"
   pure ()
@@ -67,7 +67,7 @@ testDataBase = do
 private
 printDocument : Document -> IO ()
 printDocument document =
-  do bSon <- bSon document
+  do Just bSon <- bSon document
      Just action <- fold aux (pure ()) bSon
      action
   where

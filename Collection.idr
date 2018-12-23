@@ -30,7 +30,8 @@ dropCollection (MkCollection collection) = do
 
 insertOne : Collection -> Document -> IO (Maybe ())
 insertOne (MkCollection collection) document = do
-  MkBSon bSonDocument <- bSon document
+  Just (MkBSon bSonDocument) <- bSon document
+    | Nothing => pure Nothing
   success <- foreign FFI_C "idris_mongoc_collection_insert_one"
     (CData -> CData -> IO Int) collection bSonDocument
   case success of
@@ -40,7 +41,8 @@ insertOne (MkCollection collection) document = do
 insertMany : Collection -> List Document -> IO (Maybe ())
 insertMany (MkCollection collection) documents =
   do
-    bSons <- auxToBSon (pure []) documents
+    Just bSons <- auxToBSons (pure $ Just []) documents
+      | Nothing => pure Nothing
     success <- foreign FFI_C "idris_mongoc_collection_insert_many"
       (CData -> Raw (List BSon) -> Int -> IO Int) collection (MkRaw bSons) (size bSons)
     case success of
@@ -48,13 +50,18 @@ insertMany (MkCollection collection) documents =
       _ => pure $ Just ()
   where
   
-    auxToBSon : IO (List BSon) -> List Document -> IO (List BSon)
-    auxToBSon bSonsIO [] = bSonsIO
-    auxToBSon bSonsIO (head::tail) = do
-      bSon <- bSon head
-      bSons <- bSonsIO
-      auxToBSon (pure (bSon::bSons)) tail
-    
+    auxToBSons : IO (Maybe (List BSon)) -> List Document -> IO (Maybe (List BSon))
+    auxToBSons bSonsIO (head::tail) = do
+      Just bSons <- bSonsIO
+        | Nothing => pure Nothing
+      Just bSon <- bSon head
+        | Nothing => pure Nothing
+      auxToBSons (pure $ Just (bSon::bSons)) tail
+    auxToBSons bSonsIO [] = do
+      Just bSons <- bSonsIO
+        | Nothing => pure Nothing
+      pure $ Just $ reverse bSons
+
     size : List BSon -> Int
     size list = aux 0 list where
       aux : Int -> List BSon -> Int
