@@ -20,6 +20,10 @@ appendInt32 : BSon -> String -> Bits32 -> IO ()
 appendInt32 (MkBSon bSon) key value =
   foreign FFI_C "idris_bson_append_int32" (CData -> String -> Bits32 -> IO ()) bSon key value
 
+appendInt64 : BSon -> String -> Bits64 -> IO ()
+appendInt64 (MkBSon bSon) key value =
+  foreign FFI_C "idris_bson_append_int64" (CData -> String -> Bits64 -> IO ()) bSon key value
+
 appendUTF8 : BSon -> String -> String -> IO ()
 appendUTF8 (MkBSon bSon) key value =
   foreign FFI_C "idris_bson_append_utf8" (CData -> String -> String -> IO ()) bSon key value
