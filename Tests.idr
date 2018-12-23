@@ -100,3 +100,11 @@ testInsertMany = do
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- insertMany collection [document, document]
   cleanUp ()
+
+testDropCollection : IO ()
+testDropCollection = do
+  () <- Mongo.init ()
+  client <- getClient ()
+  collection <- collection client "idris_mongo_test" "testCollection"
+  Just () <- dropCollection collection
+  pure ()

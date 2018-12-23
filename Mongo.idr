@@ -80,6 +80,14 @@ collection (MkClient clientCData) db name = do
     (CData -> String -> String -> IO CData) clientCData db name
   pure $ MkCollection cData
 
+dropCollection : Collection -> IO (Maybe ())
+dropCollection (MkCollection collection) = do
+  success <- foreign FFI_C "idris_mongoc_collection_drop_with_opts"
+    (CData -> IO Int) collection
+  case success of
+    0 => pure Nothing
+    _ => pure $ Just ()
+
 insertOne : Collection -> Document -> IO (Maybe ())
 insertOne (MkCollection collection) document = do
   MkBSon bSonDocument <- bSon document

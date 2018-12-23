@@ -51,22 +51,9 @@ CData idris_mongoc_client_get_database(const CData clientCData,
   return cdata_manage(database, 0, idris_mongoc_database_finalizer);
 }
 
-static void idris_mongoc_collection_finalizer(void * collection) {
-  mongoc_collection_destroy((mongoc_collection_t *) collection);
-}
-
-CData idris_mongoc_client_get_collection(const CData clientCData,
-					 const char * db_name,
-					 const char * name)
-{
-  mongoc_client_t * client = (mongoc_client_t *) clientCData->data;
-  mongoc_collection_t * collection = mongoc_client_get_collection(client, db_name, name);
-  return cdata_manage(collection, 0, idris_mongoc_collection_finalizer);
-}
-
 CData idris_mongoc_client_command_simple(const CData clientCData,
-				       const char * db_name,
-				       const CData commandCData)
+                                       const char * db_name,
+                                       const CData commandCData)
 {
   mongoc_client_t * client = (mongoc_client_t *) clientCData->data;
   const bson_t * command = (bson_t *) commandCData->data;
@@ -77,6 +64,25 @@ CData idris_mongoc_client_command_simple(const CData clientCData,
     reply = NULL;
   }
   return idris_bson_manage(reply);
+}
+
+static void idris_mongoc_collection_finalizer(void * collection) {
+  mongoc_collection_destroy((mongoc_collection_t *) collection);
+}
+
+CData idris_mongoc_client_get_collection(const CData client_cdata,
+					 const char * db_name,
+					 const char * name)
+{
+  mongoc_client_t * client = (mongoc_client_t *) client_cdata->data;
+  mongoc_collection_t * collection = mongoc_client_get_collection(client, db_name, name);
+  return cdata_manage(collection, 0, idris_mongoc_collection_finalizer);
+}
+
+const bool idris_mongoc_collection_drop_with_opts(const CData collection_cdata)
+{
+  mongoc_collection_t * collection = (mongoc_collection_t *) collection_cdata->data;
+  return mongoc_collection_drop_with_opts(collection, NULL, NULL);
 }
 
 const bool idris_mongoc_collection_insert_one(const CData collectionCData,
