@@ -11,10 +11,12 @@ data Document : Type where
 bSon : Document -> IO (Maybe BSon)
 bSon (MkDocument entries) =
   foldl append init entries where
+
   init : IO (Maybe BSon)
   init = do
     bSon <- BSon.bSon ()
     pure $ Just bSon
+
   append : IO (Maybe BSon) -> (String, Value) -> IO (Maybe BSon)
   append accu (key, Int32Value value) = do
     Just b <- accu
