@@ -56,11 +56,11 @@ insertMany (MkCollection collection) documents =
         | Nothing => pure Nothing
       Just bSon <- bSon head
         | Nothing => pure Nothing
-      auxToBSons (pure (List.(::) bSon bSons)) tail
+      auxToBSons (pure $ Just (bSon::bSons)) tail
     auxToBSons bSonsIO [] = do
       Just bSons <- bSonsIO
         | Nothing => pure Nothing
-      Just $ reverse bSons
+      pure $ Just $ reverse bSons
 
     size : List BSon -> Int
     size list = aux 0 list where
