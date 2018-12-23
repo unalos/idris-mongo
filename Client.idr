@@ -21,6 +21,32 @@ mkClient (MkURI uri) = do
     (CData -> IO CData) uri
   pure $ MkClient clientCData
 
+public export
+data APIVersion = VERSION_LEGACY | VERSION_2
+
+private
+apiVersionLegacy : IO Int
+apiVersionLegacy = foreign FFI_C "idris_mongoc_error_api_version_legacy" (IO Int)
+
+private
+apiVersion2 : IO Int
+apiVersion2 = foreign FFI_C "idris_mongoc_error_api_version_2" (IO Int)
+
+private
+versionAsInt : APIVersion -> IO Int
+versionAsInt VERSION_LEGACY = apiVersionLegacy
+versionAsInt VERSION_2      = apiVersion2
+
+private
+clientSetErrorAPI : Client -> APIVersion -> IO (Maybe ())
+clientSetErrorAPI (MkClient client) version = do
+  apiVersion <- versionAsInt version
+  success <- foreign FFI_C "idris_mongoc_client_set_error_api"
+    (CData -> Int -> IO Int) client apiVersion
+  case success of
+    0 => pure Nothing
+    _ => pure $ Just ()
+
 private
 clientSetAppName : Client -> String -> IO (Maybe ())
 clientSetAppName (MkClient client) appName = do
@@ -31,13 +57,15 @@ clientSetAppName (MkClient client) appName = do
     0 => pure Nothing
     _ => pure $ Just ()
 
-client : URI -> String -> IO (Maybe Client)
-client uri appName = do
-  client' <- mkClient uri
-  success <- clientSetAppName client' appName
-  case success of
-    Nothing => pure Nothing
-    Just () => pure $ Just client'
+
+client : URI -> {default VERSION_2 version : APIVersion} -> String -> IO (Maybe Client)
+client uri {version} appName = do
+  client <- mkClient uri
+  success1 <- clientSetErrorAPI client version
+  success2 <- clientSetAppName client appName
+  case (success1, success2) of
+    (Just (), Just ()) => pure $ Just client
+    _ => pure Nothing
 
 simpleCommand : Client -> String -> Document -> IO (Maybe BSon)
 simpleCommand (MkClient client) db command = do

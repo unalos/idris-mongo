@@ -1,6 +1,8 @@
 IDRIS=idris
 IDRIS_PKG=mongo.ipkg
 
+IDRIS_CFLAGS=-Werror
+
 export IDRIS_CFLAGS
 
 all: build test
