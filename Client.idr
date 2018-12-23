@@ -4,6 +4,7 @@ import Common
 import BSon
 import ISon
 import Mongo
+import Options
 
 %lib C "mongoc-1.0"
 %link C "idris_mongo_client.o"
@@ -78,12 +79,13 @@ simpleCommand (MkClient client) db command = do
     True => pure Nothing
     False => pure $ Just $ MkBSon reply
 
-writeCommand : Client -> String -> Document -> BSon -> IO (Maybe BSon)
-writeCommand (MkClient client) db command (MkBSon options) = do
+writeCommand : Client -> String -> Document -> Options -> IO (Maybe BSon)
+writeCommand (MkClient client) db command (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
     | Nothing => pure Nothing
   reply <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
-    (CData -> String -> CData -> CData -> IO CData) client db bSonCommand options
+    (CData -> String -> CData -> CData -> IO CData)
+    client db bSonCommand options
   failure <- isCDataPtrNull reply
   case failure of
     True => pure Nothing

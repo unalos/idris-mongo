@@ -25,3 +25,5 @@ tests = Tests.testBSonFromJSon
       , Tests.testDataBase
       , Tests.testInsertCollection
       , Tests.testInsertMany
+      , Tests.testDropCollection
+      , Tests.testCloneCollectionAsCapped

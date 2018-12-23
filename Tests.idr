@@ -4,6 +4,8 @@ import BSon
 import ISon
 import Mongo
 import Command
+import WriteConcern
+import Options
 import Client
 import Collection
 
@@ -107,3 +109,16 @@ testDropCollection = do
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- dropCollection collection
   pure ()
+
+testCloneCollectionAsCapped : IO ()
+testCloneCollectionAsCapped = do
+  () <- Mongo.init ()
+  client <- getClient ()
+  collection <- collection client "idris_mongo_test" "testCollection"
+  let cloneCollectionAsCappedCommand =
+    cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
+  concern <- writeConcern {wMajority = True}
+  Just opts <- options concern
+  Just reply <- writeCommand client "idris_mongo_test" cloneCollectionAsCappedCommand opts
+  jSon <- canonicalExtendedJSon reply
+  putStrLn jSon
