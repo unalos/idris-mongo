@@ -51,14 +51,14 @@ insertMany (MkCollection collection) documents =
   where
   
     auxToBSon : IO (Maybe (List BSon)) -> List Document -> IO (Maybe (List BSon))
-    auxToBSon bSonsIO [] = bSonsIO
     auxToBSon bSonsIO (head::tail) = do
       Just bSons <- bSonsIO
         | Nothing => pure Nothing
       Just bSon <- bSon head
         | Nothing => pure Nothing
       auxToBSon (pure (bSon::bSons)) tail
-    
+    auxToBSon bSonsIO [] = bSonsIO
+
     size : List BSon -> Int
     size list = aux 0 list where
       aux : Int -> List BSon -> Int
