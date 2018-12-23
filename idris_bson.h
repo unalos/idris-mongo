@@ -1,7 +1,5 @@
 #include "idris_rts.h"
 
-int idris_bson_is_C_data_ptr_null(const CData c_data);
-
 const CData idris_bson_init();
 
 void idris_bson_append_int32(const CData bson, const char * key, const int32_t value);

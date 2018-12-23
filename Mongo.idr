@@ -1,21 +1,14 @@
 module Mongo
 
+import Common
 import BSon
 import ISon
 
 %lib C "mongoc-1.0"
 %link C "idris_mongo.o"
 %include C "idris_mongo.h"
-%access export
 
-private
-isCDataPtrNull : CData -> IO Bool
-isCDataPtrNull cData = do
-  success <- foreign FFI_C "idris_mongoc_is_C_data_ptr_null"
-    (CData -> IO Int) cData
-  case success of
-    0 => pure False
-    _ => pure True
+%access export
 
 init : () -> IO ()
 init () = foreign FFI_C "idris_mongoc_init" (IO ())

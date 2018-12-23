@@ -1,7 +1,9 @@
 package mongo
 
-modules = BSon, ISon, Mongo, Tests
-objs = idris_bson.o, idris_bson.h, idris_mongo.o, idris_mongo.h
+modules = Common, BSon, ISon, Mongo, Tests
+objs = idris_common.o, idris_common.h
+     , idris_bson.o, idris_bson.h
+     , idris_mongo.o, idris_mongo.h
 makefile = binaries.make
 
 tests = Tests.testBSonFromJSon

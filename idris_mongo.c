@@ -2,11 +2,6 @@
 #include <mongoc/mongoc.h>
 #include "idris_bson_manage.h"
 
-int idris_mongoc_is_C_data_ptr_null(const CData c_data)
-{
-  return (int) (NULL == c_data->data);
-}
-
 void idris_mongoc_init()
 {
   mongoc_init();

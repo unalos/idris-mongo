@@ -1,11 +1,6 @@
 #include "idris_rts.h"
 #include <bson/bson.h>
 
-int idris_bson_is_C_data_ptr_null(const CData c_data)
-{
-  return (int) (NULL == c_data->data);
-}
-
 bson_t * idris_bson_allocate()
 {
   return malloc(sizeof(bson_t));

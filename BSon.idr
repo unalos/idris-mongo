@@ -1,19 +1,12 @@
 module BSon
 
+import Common
+
 %lib C "bson-1.0"
 %link C "idris_bson.o"
 %include C "idris_bson.h"
 
 %access export
-
-private
-isCDataPtrNull : CData -> IO Bool
-isCDataPtrNull cData = do
-  success <- foreign FFI_C "idris_bson_is_C_data_ptr_null"
-    (CData -> IO Int) cData
-  case success of
-    0 => pure False
-    _ => pure True
 
 public export
 data BSon = MkBSon CData
