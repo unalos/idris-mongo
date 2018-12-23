@@ -3,6 +3,7 @@ module Tests
 import BSon
 import ISon
 import Mongo
+import Command
 import Client
 import Collection
 
@@ -43,13 +44,9 @@ getClient () = do
   pure client
 
 private
-pingCommand : Document
-pingCommand = MkDocument [("ping", Int32Value 1)]
-
-private
 ping : Client -> IO String
 ping client = do
-  Just reply <- simpleCommand client "admin" pingCommand
+  Just reply <- simpleCommand client "admin" Command.ping
   canonicalExtendedJSon reply
 
 testPing : IO ()

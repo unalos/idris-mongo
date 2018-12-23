@@ -3,13 +3,17 @@ package mongo
 modules = Common
 	, BSon
 	, ISon
+	, Command
 	, Mongo
+	, Client
 	, Collection
 	, Tests
 
-objs = idris_common.o, idris_common.h
-     , idris_bson.o, idris_bson.h
-     , idris_mongo.o, idris_mongo.h
+objs = idris_common.o             , idris_common.h
+     , idris_bson.o               , idris_bson.h
+     , idris_mongo.o              , idris_mongo.h
+     , idris_mongo_client.o       , idris_mongo_client.h
+     , idris_mongo_collection.o   , idris_mongo_collection.h
 
 makefile = binaries.make
 
