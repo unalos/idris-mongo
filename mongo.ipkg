@@ -8,3 +8,4 @@ tests = Tests.testRelaxedJSon
       , Tests.testPing
       , Tests.testDataBase
       , Tests.testInsertCollection
+      , Tests.testInsertMany

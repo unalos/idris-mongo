@@ -84,6 +84,14 @@ testInsertCollection : IO ()
 testInsertCollection = do
   () <- Mongo.init ()
   client <- getClient ()
-  collection <- collection client "testDatabase" "testCollection"
+  collection <- collection client "testDataBase" "testCollection"
   () <- insert collection
-  cleanUp()
+  cleanUp ()
+
+testInsertMany : IO ()
+testInsertMany = do
+  () <- Mongo.init ()
+  client <- getClient ()
+  collection <- collection client "testDataBase" "testCollection"
+  Just () <- insertMany collection [document, document]
+  cleanUp ()

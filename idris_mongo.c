@@ -85,9 +85,26 @@ CData idris_mongoc_client_command_simple(const CData clientCData,
 }
 
 const bool idris_mongoc_collection_insert_one(const CData collectionCData,
-					     const CData documentCData)
+                                              const CData documentCData)
 {
   mongoc_collection_t * collection = (mongoc_collection_t *) collectionCData->data;
   bson_t * document = (bson_t *) documentCData->data;
   return mongoc_collection_insert_one(collection, document, NULL, NULL, NULL);
+}
+
+const bool idris_mongoc_collection_insert_many(const CData collection_cdata,
+					       const VAL documents,
+					       const int number_documents)
+{
+  mongoc_collection_t * collection = (mongoc_collection_t *) collection_cdata->data;
+  const bson_t ** documents_array = malloc(number_documents * sizeof(bson_t *));
+  int index = 0;
+  VAL cursor = documents;
+  while (cursor->hdr.ty == CT_CON && cursor->hdr.u16 == 2)
+    {
+      documents_array[index] = (bson_t *) ((CDataC *) ((Con *) cursor)->args[0])->item->data;
+      index++;
+      cursor = ((Con *) cursor)->args[1];
+    }
+  return mongoc_collection_insert_many(collection, documents_array, number_documents, NULL, NULL, NULL);
 }

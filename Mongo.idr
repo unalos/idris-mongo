@@ -94,3 +94,27 @@ insertOne (MkCollection collection) document = do
   case success of
     0 => pure Nothing
     _ => pure $ Just ()
+
+insertMany : Collection -> List Document -> IO (Maybe ())
+insertMany (MkCollection collection) documents =
+  do
+    bSons <- auxToBSon (pure []) documents
+    success <- foreign FFI_C "idris_mongoc_collection_insert_many"
+      (CData -> Raw (List BSon) -> Int -> IO Int) collection (MkRaw bSons) (size bSons)
+    case success of
+      0 => pure Nothing
+      _ => pure $ Just ()
+  where
+  
+    auxToBSon : IO (List BSon) -> List Document -> IO (List BSon)
+    auxToBSon bSonsIO [] = bSonsIO
+    auxToBSon bSonsIO (head::tail) = do
+      bSon <- bSon head
+      bSons <- bSonsIO
+      auxToBSon (pure (bSon::bSons)) tail
+    
+    size : List BSon -> Int
+    size list = aux 0 list where
+      aux : Int -> List BSon -> Int
+      aux counted (_::tail) = aux (counted + 1) tail
+      aux counted [] = counted
