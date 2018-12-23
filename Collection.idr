@@ -4,10 +4,11 @@ import Common
 import BSon
 import ISon
 import Mongo
+import Client
 
 %lib C "mongoc-1.0"
-%link C "idris_mongo.o"
-%include C "idris_mongo.h"
+%link C "idris_mongo_collection.o"
+%include C "idris_mongo_collection.h"
 
 %access export
 
