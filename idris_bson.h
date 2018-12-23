@@ -1,6 +1,6 @@
 #include "idris_rts.h"
 
-const CData idris_bson_init();
+const CData idris_bson_new();
 
 void idris_bson_append_int32(const CData bson, const char * key, const int32_t value);
 

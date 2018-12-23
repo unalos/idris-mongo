@@ -1,14 +1,9 @@
 #include "idris_rts.h"
 #include <bson/bson.h>
 
-bson_t * idris_bson_allocate()
-{
-  return malloc(sizeof(bson_t));
-}
-
 void idris_bson_finalize(void * bson)
 {
-  free(bson);
+  bson_destroy(bson);
 }
 
 const CData idris_bson_manage(bson_t * bson)
@@ -16,10 +11,9 @@ const CData idris_bson_manage(bson_t * bson)
   return cdata_manage(bson, sizeof(bson_t), idris_bson_finalize);
 }
 
-const CData idris_bson_init()
+const CData idris_bson_new()
 {
-  bson_t * bson = idris_bson_allocate();
-  bson_init(bson);
+  bson_t * bson = bson_new();
   return idris_bson_manage(bson);
 }
 

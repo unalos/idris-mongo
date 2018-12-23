@@ -11,9 +11,9 @@ import Common
 public export
 data BSon = MkBSon CData
 
-init : () -> IO BSon
-init () = do
-  cData <- foreign FFI_C "idris_bson_init" (IO CData)
+bSon : () -> IO BSon
+bSon () = do
+  cData <- foreign FFI_C "idris_bson_new" (IO CData)
   pure $ MkBSon cData
 
 appendInt32 : BSon -> String -> Bits32 -> IO ()
