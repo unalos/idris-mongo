@@ -1,7 +1,6 @@
 *.o
 *.ibc
 *.bin
-idrisMongo
 *~
 \#*\#
 *.dSYM
