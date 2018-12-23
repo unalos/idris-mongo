@@ -69,7 +69,8 @@ client uri {version} appName = do
 
 simpleCommand : Client -> String -> Document -> IO (Maybe BSon)
 simpleCommand (MkClient client) db command = do
-  MkBSon bSonCommand <- bSon command
+  Just (MkBSon bSonCommand) <- bSon command
+    | Nothing => pure Nothing
   reply <- foreign FFI_C "idris_mongoc_client_command_simple"
     (CData -> String -> CData -> IO CData) client db bSonCommand
   failure <- isCDataPtrNull reply
