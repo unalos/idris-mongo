@@ -7,10 +7,27 @@ static void idris_mongoc_client_finalizer(void * client)
   mongoc_client_destroy((mongoc_client_t *) client);
 }
 
-CData idris_mongoc_client_new_from_uri(const CData uri)
+const CData idris_mongoc_client_new_from_uri(const CData uri_cdata)
 {
-  mongoc_client_t * client = mongoc_client_new_from_uri((mongoc_uri_t *) uri->data);
+  mongoc_client_t * client = mongoc_client_new_from_uri((mongoc_uri_t *) uri_cdata->data);
   return cdata_manage(client, 0, idris_mongoc_client_finalizer);
+}
+
+const int idris_mongoc_error_api_version_legacy()
+{
+  return MONGOC_ERROR_API_VERSION_LEGACY;
+}
+
+const int idris_mongoc_error_api_version_2()
+{
+  return MONGOC_ERROR_API_VERSION_2;
+}
+
+const int idris_mongoc_client_set_error_api(const CData client_cdata,
+					    const int version)
+{
+  mongoc_client_t * client = (mongoc_client_t *) client_cdata->data;
+  return mongoc_client_set_error_api(client, version);
 }
 
 int idris_mongoc_client_set_appname(const CData client,
