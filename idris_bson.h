@@ -1,10 +1,14 @@
 #include "idris_rts.h"
 
+int idris_bson_is_C_data_ptr_null(const CData c_data);
+
 const CData idris_bson_init();
 
 void idris_bson_append_int32(const CData bson, const char * key, const int32_t value);
 
 void idris_bson_append_utf8(const CData bson, const char * key, const char * value);
+
+const CData idris_bson_new_from_json(const char * json);
 
 const VAL idris_bson_as_canonical_extended_json(const CData bson);
 

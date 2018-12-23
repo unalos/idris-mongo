@@ -4,7 +4,8 @@ modules = BSon, ISon, Mongo, Tests
 objs = idris_bson.o, idris_bson.h, idris_mongo.o, idris_mongo.h
 makefile = binaries.make
 
-tests = Tests.testRelaxedJSon
+tests = Tests.testBSonFromJSon
+      , Tests.testRelaxedJSon
       , Tests.testPing
       , Tests.testDataBase
       , Tests.testInsertCollection

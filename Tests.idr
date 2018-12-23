@@ -10,6 +10,11 @@ private
 uriString : String
 uriString = "mongodb://localhost"
 
+testBSonFromJSon : IO ()
+testBSonFromJSon = do
+  Just _ <- fromJSon "{ \"hello\" : \"world\" }"
+  pure ()
+
 private
 document : Document
 document = MkDocument [("hello", UTF8Value "world")]

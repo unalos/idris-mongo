@@ -8,11 +8,12 @@ import ISon
 %include C "idris_mongo.h"
 %access export
 
-isCDataPtrNull: CData -> IO Bool
+private
+isCDataPtrNull : CData -> IO Bool
 isCDataPtrNull cData = do
-  code <- foreign FFI_C "idris_mongoc_is_C_data_ptr_null"
+  success <- foreign FFI_C "idris_mongoc_is_C_data_ptr_null"
     (CData -> IO Int) cData
-  case code of
+  case success of
     0 => pure False
     _ => pure True
 
@@ -29,9 +30,9 @@ uri uriString = do
   cData <- foreign FFI_C "idris_mongoc_uri_new_with_error"
     (String -> IO CData) uriString
   isError <- isCDataPtrNull cData
-  pure $ case isError of
-    True => Nothing
-    False => Just $ MkURI cData
+  case isError of
+    True => pure Nothing
+    False => pure (Just $ MkURI cData)
 
 data Client = MkClient CData
 

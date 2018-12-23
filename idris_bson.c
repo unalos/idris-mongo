@@ -1,6 +1,11 @@
 #include "idris_rts.h"
 #include <bson/bson.h>
 
+int idris_bson_is_C_data_ptr_null(const CData c_data)
+{
+  return (int) (NULL == c_data->data);
+}
+
 bson_t * idris_bson_allocate()
 {
   return malloc(sizeof(bson_t));
@@ -31,6 +36,12 @@ void idris_bson_append_int32(const CData bson, const char * key, const int32_t v
 void idris_bson_append_utf8(const CData bson, const char * key, const char * value)
 {
   bson_append_utf8((bson_t *) bson->data, key, -1, value, -1);
+}
+
+const CData idris_bson_new_from_json(const char * json)
+{
+  bson_t * bson = bson_new_from_json((const uint8_t *) json, -1, NULL);
+  return cdata_manage(bson, sizeof(bson_t), idris_bson_finalize);
 }
 
 const VAL idris_bson_as_canonical_extended_json(const CData bson)

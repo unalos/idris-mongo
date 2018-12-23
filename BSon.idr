@@ -5,6 +5,15 @@ module BSon
 %include C "idris_bson.h"
 %access export
 
+private
+isCDataPtrNull : CData -> IO Bool
+isCDataPtrNull cData = do
+  success <- foreign FFI_C "idris_bson_is_C_data_ptr_null"
+    (CData -> IO Int) cData
+  case success of
+    0 => pure False
+    _ => pure True
+
 public export
 data BSon = MkBSon CData
 
@@ -20,6 +29,14 @@ appendInt32 (MkBSon bSon) key value =
 appendUTF8 : BSon -> String -> String -> IO ()
 appendUTF8 (MkBSon bSon) key value =
   foreign FFI_C "idris_bson_append_utf8" (CData -> String -> String -> IO ()) bSon key value
+
+fromJSon : String -> IO (Maybe BSon)
+fromJSon jSon = do
+  cData <- foreign FFI_C "idris_bson_new_from_json" (String -> IO CData) jSon
+  isError <- isCDataPtrNull cData
+  case isError of
+    True => pure Nothing
+    False => pure (Just $ MkBSon cData)
 
 canonicalExtendedJSon : BSon -> IO String
 canonicalExtendedJSon (MkBSon bSon) = do
