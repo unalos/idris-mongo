@@ -41,7 +41,7 @@ insertOne (MkCollection collection) document = do
 insertMany : Collection -> List Document -> IO (Maybe ())
 insertMany (MkCollection collection) documents =
   do
-    Just bSons <- auxToBSon (pure $ Just []) documents
+    Just bSons <- auxToBSons (pure $ Just []) documents
       | Nothing => pure Nothing
     success <- foreign FFI_C "idris_mongoc_collection_insert_many"
       (CData -> Raw (List BSon) -> Int -> IO Int) collection (MkRaw bSons) (size bSons)
@@ -50,14 +50,17 @@ insertMany (MkCollection collection) documents =
       _ => pure $ Just ()
   where
   
-    auxToBSon : IO (Maybe (List BSon)) -> List Document -> IO (Maybe (List BSon))
-    auxToBSon bSonsIO (head::tail) = do
+    auxToBSons : IO (Maybe (List BSon)) -> List Document -> IO (Maybe (List BSon))
+    auxToBSons bSonsIO (head::tail) = do
       Just bSons <- bSonsIO
         | Nothing => pure Nothing
       Just bSon <- bSon head
         | Nothing => pure Nothing
-      auxToBSon (pure (bSon::bSons)) tail
-    auxToBSon bSonsIO [] = bSonsIO
+      auxToBSons (pure (List.(::) bSon bSons)) tail
+    auxToBSons bSonsIO [] = do
+      Just bSons <- bSonsIO
+        | Nothing => pure Nothing
+      Just $ reverse bSons
 
     size : List BSon -> Int
     size list = aux 0 list where
