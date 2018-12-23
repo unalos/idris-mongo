@@ -78,6 +78,7 @@ public export
 data Value : Type where
   UTF8Value  : String -> Value
   Int32Value : Bits32 -> Value
+  Int64Value : Bits64 -> Value
 
 Show Value where
   show (UTF8Value string) = show string
