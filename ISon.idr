@@ -12,7 +12,7 @@ data Document : Type where
 bSon : Document -> IO BSon
 bSon (MkDocument entries) = foldl append (BSon.bSon ()) entries where
 
-  appendUsing : (BSon -> String -> t) -> IO BSon -> String -> t -> IO BSon
+  appendUsing : (BSon -> String -> t -> IO ()) -> IO BSon -> String -> t -> IO BSon
   appendUsing appender accu key value = do
     bSon <- accu
     () <- appender bSon key value
