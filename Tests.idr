@@ -32,7 +32,7 @@ private
 getClient : () -> IO Client
 getClient () = do
   Just uri <- uri uriString
-  Just client <- client uri "testdb"
+  Just client <- client uri "idris_mongo_test"
   pure client
 
 private
@@ -57,7 +57,7 @@ testDataBase : IO ()
 testDataBase = do
   () <- Mongo.init ()
   client <- getClient ()
-  dataBase <- dataBase client "testDataBase"
+  dataBase <- dataBase client "idris_mongo_test"
   cleanUp()
 
 private
@@ -84,7 +84,7 @@ testInsertCollection : IO ()
 testInsertCollection = do
   () <- Mongo.init ()
   client <- getClient ()
-  collection <- collection client "testDataBase" "testCollection"
+  collection <- collection client "idris_mongo_test" "testCollection"
   () <- insert collection
   cleanUp ()
 
@@ -92,6 +92,6 @@ testInsertMany : IO ()
 testInsertMany = do
   () <- Mongo.init ()
   client <- getClient ()
-  collection <- collection client "testDataBase" "testCollection"
+  collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- insertMany collection [document, document]
   cleanUp ()
