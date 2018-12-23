@@ -3,6 +3,7 @@ module Tests
 import BSon
 import ISon
 import Mongo
+import Collection
 
 %access export
 
