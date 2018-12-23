@@ -16,17 +16,27 @@ bSon () = do
   cData <- foreign FFI_C "idris_bson_new" (IO CData)
   pure $ MkBSon cData
 
-appendInt32 : BSon -> String -> Bits32 -> IO ()
+handleSuccessCode : IO Int -> IO (Maybe ())
+handleSuccessCode successIO = do
+  success <- successIO
+  case success of
+    0 => pure Nothing
+    _ => pure $ Just ()
+
+appendInt32 : BSon -> String -> Bits32 -> IO (Maybe ())
 appendInt32 (MkBSon bSon) key value =
-  foreign FFI_C "idris_bson_append_int32" (CData -> String -> Bits32 -> IO ()) bSon key value
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_int32"
+    (CData -> String -> Bits32 -> IO Int) bSon key value
 
-appendInt64 : BSon -> String -> Bits64 -> IO ()
+appendInt64 : BSon -> String -> Bits64 -> IO (Maybe ())
 appendInt64 (MkBSon bSon) key value =
-  foreign FFI_C "idris_bson_append_int64" (CData -> String -> Bits64 -> IO ()) bSon key value
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_int64"
+    (CData -> String -> Bits64 -> IO Int) bSon key value
 
-appendUTF8 : BSon -> String -> String -> IO ()
+appendUTF8 : BSon -> String -> String -> IO (Maybe ())
 appendUTF8 (MkBSon bSon) key value =
-  foreign FFI_C "idris_bson_append_utf8" (CData -> String -> String -> IO ()) bSon key value
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_utf8"
+    (CData -> String -> String -> IO Int) bSon key value
 
 fromJSon : String -> IO (Maybe BSon)
 fromJSon jSon = do
@@ -96,11 +106,9 @@ iterUTF8 (MkIterator iterator) = do
 
 private
 UTF8Validate : String -> IO (Maybe ())
-UTF8Validate string = do
-  success <- foreign FFI_C "idris_bson_utf8_validate" (String -> IO Int) string
-  case success of
-    0 => pure Nothing
-    1 => pure $ Just ()
+UTF8Validate string =
+  handleSuccessCode $ foreign FFI_C "idris_bson_utf8_validate"
+    (String -> IO Int) string
 
 private
 iterInt32 : Iterator -> IO Bits32
