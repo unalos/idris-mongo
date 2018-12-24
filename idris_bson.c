@@ -110,10 +110,9 @@ const int idris_bson_type_int32()
 {
   return (int) BSON_TYPE_INT32;
 }
-
-const int idris_bson_iter_int32(const CData iter)
+const bool idris_bson_utf8_validate(const char * utf8)
 {
-  return bson_iter_int32((const bson_iter_t *) iter->data);
+  return bson_utf8_validate(utf8, strlen(utf8) ,false);
 }
 
 const VAL idris_bson_iter_utf8(const CData iter_cdata)
@@ -123,11 +122,6 @@ const VAL idris_bson_iter_utf8(const CData iter_cdata)
   const char * utf8 = bson_iter_utf8(iter, &length);
   const VAL raw_utf8 = MKSTRlen(get_vm(), utf8, length);
   return raw_utf8;
-}
-
-const bool idris_bson_utf8_validate(const char * utf8)
-{
-  return bson_utf8_validate(utf8, strlen(utf8) ,false);
 }
 
 const CData idris_bson_iter_recurse(const CData iter_cdata) {
@@ -140,4 +134,14 @@ const CData idris_bson_iter_recurse(const CData iter_cdata) {
   } else {
     return idris_bson_iter_manage(child);
   }
+}
+
+const int idris_bson_iter_int32(const CData iter_cdata)
+{
+  return bson_iter_int32((const bson_iter_t *) iter_cdata->data);
+}
+
+const int idris_bson_iter_int64(const CData iter_cdata)
+{
+  return bson_iter_int64((const bson_iter_t *) iter_cdata->data);
 }

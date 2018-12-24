@@ -23,16 +23,6 @@ handleSuccessCode successIO = do
     0 => pure Nothing
     _ => pure $ Just ()
 
-appendInt32 : BSon -> String -> Bits32 -> IO (Maybe ())
-appendInt32 (MkBSon bSon) key value =
-  handleSuccessCode $ foreign FFI_C "idris_bson_append_int32"
-    (CData -> String -> Bits32 -> IO Int) bSon key value
-
-appendInt64 : BSon -> String -> Bits64 -> IO (Maybe ())
-appendInt64 (MkBSon bSon) key value =
-  handleSuccessCode $ foreign FFI_C "idris_bson_append_int64"
-    (CData -> String -> Bits64 -> IO Int) bSon key value
-
 appendUTF8 : BSon -> String -> String -> IO (Maybe ())
 appendUTF8 (MkBSon bSon) key value =
   handleSuccessCode $ foreign FFI_C "idris_bson_append_utf8"
@@ -42,6 +32,16 @@ appendDocument : BSon -> String -> BSon -> IO (Maybe ())
 appendDocument (MkBSon bSon) key (MkBSon value) =
   handleSuccessCode $ foreign FFI_C "idris_bson_append_document"
     (CData -> String -> CData -> IO Int) bSon key value
+
+appendInt32 : BSon -> String -> Bits32 -> IO (Maybe ())
+appendInt32 (MkBSon bSon) key value =
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_int32"
+    (CData -> String -> Bits32 -> IO Int) bSon key value
+
+appendInt64 : BSon -> String -> Bits64 -> IO (Maybe ())
+appendInt64 (MkBSon bSon) key value =
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_int64"
+    (CData -> String -> Bits64 -> IO Int) bSon key value
 
 fromJSon : String -> IO (Maybe BSon)
 fromJSon jSon = do
@@ -81,27 +81,17 @@ iterType : Iterator -> IO Int
 iterType (MkIterator iterator) = do
   foreign FFI_C "idris_bson_iter_type" (CData -> IO Int) iterator
 
-typeInt32 : IO Int
-typeInt32 = foreign FFI_C "idris_bson_type_int32" (IO Int)
-
-typeInt64 : IO Int
-typeInt64 = foreign FFI_C "idris_bson_type_int64" (IO Int)
-
 typeUTF8 : IO Int
 typeUTF8 = foreign FFI_C "idris_bson_type_utf8" (IO Int)
 
 typeDocument : IO Int
 typeDocument = foreign FFI_C "idris_bson_type_document" (IO Int)
 
-iterInt32 : Iterator -> IO Bits32
-iterInt32 (MkIterator iterator) =
-  foreign FFI_C "idris_bson_iter_int32"
-    (CData -> IO Bits32) iterator
+typeInt32 : IO Int
+typeInt32 = foreign FFI_C "idris_bson_type_int32" (IO Int)
 
-iterInt64 : Iterator -> IO Bits64
-iterInt64 (MkIterator iterator) =
-  foreign FFI_C "idris_bson_iter_int64"
-    (CData -> IO Bits64) iterator
+typeInt64 : IO Int
+typeInt64 = foreign FFI_C "idris_bson_type_int64" (IO Int)
 
 iterUTF8 : Iterator -> IO String
 iterUTF8 (MkIterator iterator) = do
@@ -122,3 +112,13 @@ iterRecurse (MkIterator iterator) = do
   case isError of
     True => pure Nothing
     False => pure $ Just $ MkIterator childCData
+
+iterInt32 : Iterator -> IO Bits32
+iterInt32 (MkIterator iterator) =
+  foreign FFI_C "idris_bson_iter_int32"
+    (CData -> IO Bits32) iterator
+
+iterInt64 : Iterator -> IO Bits64
+iterInt64 (MkIterator iterator) =
+  foreign FFI_C "idris_bson_iter_int64"
+    (CData -> IO Bits64) iterator

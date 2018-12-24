@@ -9,10 +9,10 @@ mutual
 
   public export
   data Value : Type where
-    Int32Value    : Bits32 -> Value
-    Int64Value    : Bits64 -> Value
     UTF8Value     : String -> Value
     DocumentValue : Document -> Value
+    Int32Value    : Bits32 -> Value
+    Int64Value    : Bits64 -> Value
 
   public export
   data Document : Type where
@@ -21,10 +21,10 @@ mutual
 mutual
 
   Show Value where
-    show (Int32Value int32) = show int32
-    show (Int64Value int64) = show int64
     show (UTF8Value string) = show string
     show (DocumentValue document) = show document
+    show (Int32Value int32) = show int32
+    show (Int64Value int64) = show int64
 
   Show Document where
     show (MkDocument keyValues) = "{" ++ (aux "" True keyValues) ++ "}" where
@@ -56,27 +56,27 @@ mutual
   iterValue iterator = do
     typeCode <- iterType iterator
     utf8 <- typeUTF8
+    document <- typeDocument
     int32 <- typeInt32
     int64 <- typeInt64
-    document <- typeDocument
     cond [
       (typeCode == utf8, do
         utf8Value <- iterUTF8 iterator
         Just () <- UTF8Validate utf8Value
           | Nothing => pure Nothing
         pure $ Just (UTF8Value utf8Value)),
-      (typeCode == int32, do
-        int32Value <- iterInt32 iterator
-        pure $ Just (Int32Value int32Value)),
-      (typeCode == int64, do
-        int64Value <- iterInt64 iterator
-        pure $ Just (Int64Value int64Value)),
       (typeCode == document, do
         Just childIterator <- iterRecurse iterator
           | Nothing => pure Nothing
         Just document <- documentValue childIterator
           | Nothing => pure Nothing
-        pure $ Just (DocumentValue document))
+        pure $ Just (DocumentValue document)),
+      (typeCode == int32, do
+        int32Value <- iterInt32 iterator
+        pure $ Just (Int32Value int32Value)),
+      (typeCode == int64, do
+        int64Value <- iterInt64 iterator
+        pure $ Just (Int64Value int64Value))
     ] (pure Nothing)
 
   private
@@ -121,13 +121,13 @@ bSon (MkDocument entries) =
     pure $ Just bSon
 
   append : IO (Maybe BSon) -> (String, Value) -> IO (Maybe BSon)
-  append accu (key, Int32Value value) =
-    appendUsing appendInt32 accu key value
-  append accu (key, Int64Value value) =
-    appendUsing appendInt64 accu key value
   append accu (key, UTF8Value value) =
     appendUsing appendUTF8  accu key value
   append accu (key, DocumentValue value) = do
     Just bSonValue <- bSon value
       | Nothing => pure Nothing
     appendUsing appendDocument accu key (bSonValue)
+  append accu (key, Int32Value value) =
+    appendUsing appendInt32 accu key value
+  append accu (key, Int64Value value) =
+    appendUsing appendInt64 accu key value

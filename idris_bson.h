@@ -16,24 +16,28 @@ const bool idris_bson_append_utf8(const CData bson,
 
 const CData idris_bson_new_from_json(const char * json);
 
-const VAL idris_bson_as_canonical_extended_json(const CData bson);
+const VAL idris_bson_as_canonical_extended_json(const CData bson_cdata);
 
-const VAL idris_bson_as_relaxed_extended_json(const CData bson);
+const VAL idris_bson_as_relaxed_extended_json(const CData bson_cdata);
 
-const CData idris_bson_iter_init(const CData bson);
+const CData idris_bson_iter_init(const CData bson_cdata);
 
-const bool idris_bson_iter_next(const CData iter);
+const bool idris_bson_iter_next(const CData iter_cdata);
 
-const char * idris_bson_iter_key(const CData iter);
+const char * idris_bson_iter_key(const CData iter_cdata);
 
-const int idris_bson_iter_type(const CData iter);
+const int idris_bson_iter_type(const CData iter_cdata);
 
 const int idris_bson_type_utf8();
 
 const int idris_bson_type_int32();
 
-const VAL idris_bson_iter_utf8(const CData iter);
-
 const bool idris_bson_utf8_validate(const char * utf8);
 
-const int idris_bson_iter_int32(const CData iter);
+const VAL idris_bson_iter_utf8(const CData iter_cdata);
+
+const CData idris_bson_iter_recurse(const CData iter_cdata);
+
+const int idris_bson_iter_int32(const CData iter_cdata);
+
+const int idris_bson_iter_int64(const CData iter_cdata);
