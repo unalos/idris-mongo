@@ -28,7 +28,7 @@ Show Document where
   show (MkDocument keyValues) = "{" ++ (aux "" True keyValues) ++ "}" where
     aux : String -> Bool -> List (String, Value) -> String
     aux accu beginning ((key, value)::tail) =
-      let commaOrNothing = if beginning then "" else ", "
+      let commaOrNothing = if beginning then "" else ", " in
       aux (commaOrNothing ++ (show key) ++ ": " ++ (show value)) False tail
     aux accu _ [] = accu
 
