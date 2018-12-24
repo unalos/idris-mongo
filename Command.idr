@@ -15,3 +15,11 @@ cloneCollectionAsCapped existingCollection cappedCollection size = MkDocument
     ("toCollection",            UTF8Value cappedCollection),
     ("size",                    Int64Value size)
   ]
+
+distinct : String -> String -> Document -> Document
+distinct collection field query = MkDocument
+  [
+    ("distinct", UTF8Value collection),
+    ("key",      UTF8Value field),
+    ("query",    DocumentValue query)
+  ]
