@@ -105,6 +105,12 @@ data ReadCommandException =
     ReadCommandCException BSonError
   | BSonReadCommandGenerationException
 
+Show ReadCommandException where
+  show (ReadCommandCException error) =
+    "ReadCommandCException: " ++ (show error)
+  show (BSonReadCommandGenerationException) =
+    "BSonReadCommandGenerationException"
+
 readCommand : Client -> String -> Document -> ReadPreferences
               -> Options -> IO (Either ReadCommandException BSon)
 readCommand (MkClient client) dbName command

@@ -130,7 +130,7 @@ testCloneCollectionAsCapped = do
                    cloneCollectionAsCappedCommand opts
     | Left (WriteCommandCException error) => do
         () <- putStrLn "WriteCommandCException"
-        message <- errorMessage error
+        let message = errorMessage error
         () <- putStrLn message
         exitWith (ExitFailure (-1))
     | Left BSonWriteCommandGenerationException => do
@@ -139,6 +139,11 @@ testCloneCollectionAsCapped = do
   jSon <- canonicalExtendedJSon reply
   () <- putStrLn jSon
   cleanUp ()
+
+failWith : String -> IO ()
+failWith message = do
+  () <- putStrLn message
+  exitWith (ExitFailure (-1))
 
 testDistinct : IO ()
 testDistinct = do
@@ -154,10 +159,11 @@ testDistinct = do
   concern <- readConcern {level = Just MAJORITY}
   Just opts <- readConcernOptions concern (MkDocument [
     ("collation", DocumentValue $ MkDocument [
-      ("locale", UTF8Value "en_us"),
+      ("locale", UTF8Value "en_US"),
       ("caseFirst", UTF8Value "lower")
     ])])
+    | Nothing => failWith "Could not create read concern options"
   Right reply <- readCommand client "idris_mongo_test"
     distinctCommand readPrefs opts
-    | Left _ => exitWith (ExitFailure (-1))
+    | Left error => failWith (show error)
   cleanUp ()
