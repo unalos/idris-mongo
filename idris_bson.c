@@ -19,25 +19,36 @@ const CData idris_bson_new()
   return idris_bson_manage(bson);
 }
 
-const bool idris_bson_append_int32(const CData bson,
+const bool idris_bson_append_utf8(const CData bson_cdata,
+				                          const char * key,
+				                          const char * value)
+{
+  return bson_append_utf8((bson_t *) bson_cdata->data, key, -1, value, -1);
+}
+
+const bool idris_bson_append_document(const CData bson_cdata,
+                                      const char * key,
+                                      const CData value_cdata)
+{
+  bson_t * bson = (bson_t *) bson_cdata->data;
+  const bson_t * value = (const bson_t *) value_cdata->data;
+  return bson_append_document(bson, key, -1, value);
+  /* TODO: Ownership of value goes to C code while Idris may trigger
+     finalizer. This is wrong. We should may a copy of value first. */
+}
+
+const bool idris_bson_append_int32(const CData bson_cdata,
 				   const char * key,
 				   const int32_t value)
 {
-  return bson_append_int32((bson_t *) bson->data, key, -1, value);
+  return bson_append_int32((bson_t *) bson_cdata->data, key, -1, value);
 }
 
 const bool idris_bson_append_int64(const CData bson_cdata,
-				   const char * key,
-				   const int64_t value)
+				                           const char * key,
+				                           const int64_t value)
 {
   return bson_append_int64((bson_t *) bson_cdata->data, key, -1, value);
-}
-
-const bool idris_bson_append_utf8(const CData bson,
-				  const char * key,
-				  const char * value)
-{
-  return bson_append_utf8((bson_t *) bson->data, key, -1, value, -1);
 }
 
 const CData idris_bson_new_from_json(const char * json)
@@ -106,10 +117,21 @@ const int idris_bson_type_utf8()
   return (int) BSON_TYPE_UTF8;
 }
 
+const int idris_bson_type_document()
+{
+  return (int) BSON_TYPE_DOCUMENT;
+}
+
 const int idris_bson_type_int32()
 {
   return (int) BSON_TYPE_INT32;
 }
+
+const int idris_bson_type_int64()
+{
+  return (int) BSON_TYPE_INT64;
+}
+
 const bool idris_bson_utf8_validate(const char * utf8)
 {
   return bson_utf8_validate(utf8, strlen(utf8) ,false);
