@@ -2,6 +2,7 @@ module Tests
 
 import BSon
 import ISon
+import BSonError
 import Mongo
 import Command
 import WriteConcern
@@ -121,8 +122,11 @@ testCloneCollectionAsCapped = do
   Just opts <- options concern
   Right reply <- writeCommand client "idris_mongo_test"
                    cloneCollectionAsCappedCommand opts
-    | Left WriteCommandCException =>
-        putStrLn "WriteCommandCException"
+    | Left (WriteCommandCException error) =>
+        do
+          () <- putStrLn "WriteCommandCException"
+          message <- errorMessage error
+          putStrLn message
     | Left BSonCommandGenerationException =>
         putStrLn "BSonCommandGenerationException"
   jSon <- canonicalExtendedJSon reply

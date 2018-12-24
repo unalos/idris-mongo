@@ -13,3 +13,9 @@ newErrorPlaceholder : () -> IO BSonError
 newErrorPlaceholder () = do
   errorPlaceholder <- foreign FFI_C "idris_bson_error_new" (IO CData)
   pure $ MkBSonError errorPlaceholder
+
+errorMessage : BSonError -> IO String
+errorMessage (MkBSonError error) = do
+  MkRaw message <- foreign FFI_C "idris_bson_error_message"
+    (CData -> IO (Raw String)) error
+  pure message
