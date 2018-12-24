@@ -95,14 +95,30 @@ typeDocument = foreign FFI_C "idris_bson_type_document" (IO Int)
 
 iterInt32 : Iterator -> IO Bits32
 iterInt32 (MkIterator iterator) =
-  foreign FFI_C "idris_bson_iter_int32" (CData -> IO Bits32) iterator
+  foreign FFI_C "idris_bson_iter_int32"
+    (CData -> IO Bits32) iterator
+
+iterInt64 : Iterator -> IO Bits64
+iterInt64 (MkIterator iterator) =
+  foreign FFI_C "idris_bson_iter_int64"
+    (CData -> IO Bits64) iterator
 
 iterUTF8 : Iterator -> IO String
 iterUTF8 (MkIterator iterator) = do
-  MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8" (CData -> IO (Raw String)) iterator
+  MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8"
+    (CData -> IO (Raw String)) iterator
   pure utf8
 
 UTF8Validate : String -> IO (Maybe ())
 UTF8Validate string =
   handleSuccessCode $ foreign FFI_C "idris_bson_utf8_validate"
     (String -> IO Int) string
+
+iterRecurse : Iterator -> IO (Maybe Iterator)
+iterRecurse (MkIterator iterator) = do
+  childCData <- foreign FFI_C "idris_bson_iter_recurse"
+    (CData -> IO CData) iterator
+  isError <- isCDataPtrNull childCData
+  case isError of
+    True => pure Nothing
+    False => pure $ Just $ MkIterator childCData

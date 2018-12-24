@@ -39,46 +39,68 @@ cond : List (Lazy Bool, Lazy a) -> a -> a
 cond [] def = def
 cond ((x, y) :: xs) def = if x then y else cond xs def
 
-private
-iterValue : Iterator -> IO (Maybe Value)
-iterValue iterator = do
-  typeCode <- iterType iterator
-  utf8 <- typeUTF8
-  int32 <- typeInt32
-  int64 <- typeInt64
-  document <- typeDocument
-  cond [
-    (typeCode == utf8, do
-      utf8Value <- iterUTF8 iterator
-      Just () <- UTF8Validate utf8Value
+mutual
+
+  private
+  documentValue : Iterator -> IO (Maybe Document)
+  documentValue iterator = do
+      Just document <- foldIterator append [] iterator
         | Nothing => pure Nothing
-      pure $ Just (UTF8Value utf8Value)),
-    (typeCode == int32, do
-      int32Value <- iterInt32 iterator
-      pure $ Just (Int32Value int32Value)),
-    (typeCode == int64, do
-      int64Value <- iterInt64 iterator
-      pure $ Just (Int64Value int64Value)),
-    (typeCode == document, do
-      documentValue <- iterDocument iterator
-      pure $ Just (DocumentValue documentValue))
-  ] (pure Nothing)
+      pure $ Just $ MkDocument (reverse document)
+    where
+      append : List (String, Value) -> String -> Value -> List (String, Value)
+      append keyValues key value = (key, value)::keyValues
+
+  private
+  iterValue : Iterator -> IO (Maybe Value)
+  iterValue iterator = do
+    typeCode <- iterType iterator
+    utf8 <- typeUTF8
+    int32 <- typeInt32
+    int64 <- typeInt64
+    document <- typeDocument
+    cond [
+      (typeCode == utf8, do
+        utf8Value <- iterUTF8 iterator
+        Just () <- UTF8Validate utf8Value
+          | Nothing => pure Nothing
+        pure $ Just (UTF8Value utf8Value)),
+      (typeCode == int32, do
+        int32Value <- iterInt32 iterator
+        pure $ Just (Int32Value int32Value)),
+      (typeCode == int64, do
+        int64Value <- iterInt64 iterator
+        pure $ Just (Int64Value int64Value)),
+      (typeCode == document, do
+        Just childIterator <- iterRecurse iterator
+          | Nothing => pure Nothing
+        Just document <- documentValue childIterator
+          | Nothing => pure Nothing
+        pure $ Just (DocumentValue document))
+    ] (pure Nothing)
+
+  private
+  foldIterator : (acc -> String -> Value -> acc) -> acc
+                 -> Iterator -> IO (Maybe acc)
+  foldIterator func init iterator =
+      aux iterator init
+    where
+      aux : Iterator -> acc -> IO (Maybe acc)
+      aux iterator acc = do
+        code <- iterNext iterator
+        case code of
+          0 => pure $ Just acc
+          _ => do
+            key <- iterKey iterator
+            Just value <- iterValue iterator
+            aux iterator (func acc key value)
 
 partial
-fold : (acc -> String -> Value -> acc) -> acc -> BSon -> IO (Maybe acc)
-fold func init bSon =
-  do iterator <- iterInit bSon
-     aux iterator init
-  where
-    aux : Iterator -> acc -> IO (Maybe acc)
-    aux iterator acc = do
-      code <- iterNext iterator
-      case code of
-        0 => pure $ Just acc
-        _ => do
-          key <- iterKey iterator
-          Just value <- iterValue iterator
-          aux iterator (func acc key value)
+fold : (acc -> String -> Value -> acc) -> acc
+       -> BSon -> IO (Maybe acc)
+fold func init bSon = do
+  iterator <- iterInit bSon
+  foldIterator func init iterator
 
 bSon : Document -> IO (Maybe BSon)
 bSon (MkDocument entries) =

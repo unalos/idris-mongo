@@ -1,6 +1,8 @@
 #include "idris_rts.h"
 #include <bson/bson.h>
 
+static void noop() {}
+
 void idris_bson_finalize(void * bson)
 {
   bson_destroy(bson);
@@ -109,10 +111,16 @@ const int idris_bson_type_int32()
   return (int) BSON_TYPE_INT32;
 }
 
-const VAL idris_bson_iter_utf8(const CData iter)
+const int idris_bson_iter_int32(const CData iter)
+{
+  return bson_iter_int32((const bson_iter_t *) iter->data);
+}
+
+const VAL idris_bson_iter_utf8(const CData iter_cdata)
 {
   uint32_t length;
-  const char * utf8 = bson_iter_utf8((const bson_iter_t *) iter->data, &length);
+  const bson_iter_t * iter = (const bson_iter_t *) iter_cdata->data;
+  const char * utf8 = bson_iter_utf8(iter, &length);
   const VAL raw_utf8 = MKSTRlen(get_vm(), utf8, length);
   return raw_utf8;
 }
@@ -122,7 +130,14 @@ const bool idris_bson_utf8_validate(const char * utf8)
   return bson_utf8_validate(utf8, strlen(utf8) ,false);
 }
 
-const int idris_bson_iter_int32(const CData iter)
-{
-  return bson_iter_int32((const bson_iter_t *) iter->data);
+const CData idris_bson_iter_recurse(const CData iter_cdata) {
+  bson_iter_t * child;
+  const bson_iter_t * iter = (const bson_iter_t *) iter_cdata->data;
+  const bool success = bson_iter_recurse(iter, child);
+  if (!success)
+  {
+    return cdata_manage(NULL, 0, noop);
+  } else {
+    return idris_bson_iter_manage(child);
+  }
 }
