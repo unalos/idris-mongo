@@ -3,7 +3,7 @@ module ISon
 import BSon
 
 %access export
-%default total
+%default covering
 
 mutual
 
@@ -127,5 +127,7 @@ bSon (MkDocument entries) =
     appendUsing appendInt64 accu key value
   append accu (key, UTF8Value value) =
     appendUsing appendUTF8  accu key value
-  append accu (key, DocumentValue value) =
-    appendUsing appendDocument accu key value
+  append accu (key, DocumentValue value) = do
+    Just bSonValue <- bSon value
+      | Nothing => pure Nothing
+    appendUsing appendDocument accu key (bSonValue)
