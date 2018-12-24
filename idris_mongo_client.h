@@ -20,6 +20,7 @@ CData idris_mongoc_client_command_simple(const CData client_cdata,
                                          const CData command_cdata);
 
 CData idris_mongoc_client_write_command_with_opts(const CData client_cdata,
-						  const char * db_name,
-						  const CData command_cdata,
-						  const CData options_cdata);
+						  																		const char * db_name,
+						  																		const CData command_cdata,
+						  																		const CData options_cdata,
+																									const CData error_cdata);

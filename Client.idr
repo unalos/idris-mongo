@@ -1,6 +1,7 @@
 module Mongo
 
 import Common
+import BSonError
 import BSon
 import ISon
 import Mongo
@@ -79,17 +80,24 @@ simpleCommand (MkClient client) db command = do
     True => pure Nothing
     False => pure $ Just $ MkBSon reply
 
-writeCommand : Client -> String -> Document -> Options -> IO (Maybe BSon)
+public export
+data Exception =
+    WriteCommandCException BSonError
+  | BSonCommandGenerationException
+
+writeCommand : Client -> String -> Document
+               -> Options -> IO (Either Exception BSon)
 writeCommand (MkClient client) db command (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
-    | Nothing => pure Nothing
+    | Nothing => pure (Left BSonCommandGenerationException)
+  MkBSonError errorPlaceholder <- newErrorPlaceholder ()
   reply <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
-    (CData -> String -> CData -> CData -> IO CData)
-    client db bSonCommand options
+    (CData -> String -> CData -> CData -> CData -> IO CData)
+    client db bSonCommand options errorPlaceholder
   failure <- isCDataPtrNull reply
   case failure of
-    True => pure Nothing
-    False => pure $ Just $ MkBSon reply
+    True => pure $ Left (WriteCommandCException (MkBSonError errorPlaceholder))
+    False => pure $ Right $ MkBSon reply
 
 data DataBase = MkDataBase CData
 

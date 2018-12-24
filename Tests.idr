@@ -119,6 +119,11 @@ testCloneCollectionAsCapped = do
     cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
   concern <- writeConcern {wMajority = True}
   Just opts <- options concern
-  Just reply <- writeCommand client "idris_mongo_test" cloneCollectionAsCappedCommand opts
+  Right reply <- writeCommand client "idris_mongo_test"
+                   cloneCollectionAsCappedCommand opts
+    | Left WriteCommandCException =>
+        putStrLn "WriteCommandCException"
+    | Left BSonCommandGenerationException =>
+        putStrLn "BSonCommandGenerationException"
   jSon <- canonicalExtendedJSon reply
   putStrLn jSon
