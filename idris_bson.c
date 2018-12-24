@@ -33,8 +33,6 @@ const bool idris_bson_append_document(const CData bson_cdata,
   bson_t * bson = (bson_t *) bson_cdata->data;
   const bson_t * value = (const bson_t *) value_cdata->data;
   return bson_append_document(bson, key, -1, value);
-  /* TODO: Ownership of value goes to C code while Idris may trigger
-     finalizer. This is wrong. We should may a copy of value first. */
 }
 
 const bool idris_bson_append_int32(const CData bson_cdata,
