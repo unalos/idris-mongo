@@ -62,23 +62,27 @@ relaxedExtendedJSon (MkBSon bSon) = do
   pure jSon
 
 export
-data Iterator = MkIterator CData
+data Iterator = MkIterator CData BSon
+-- NOTE: We keep a reference to the BSon object on which we are iterating to
+-- keep garbage collection sound: we do not want the object on which we are
+-- iterating to be garbage collected before we have finished using the iterator.
 
 iterInit : BSon -> IO Iterator
-iterInit (MkBSon bSon) = do
-  cData <- foreign FFI_C "idris_bson_iter_init" (CData -> IO CData) bSon
-  pure $ MkIterator cData
+iterInit bSon = do
+  let MkBSon bSonCData = bSon
+  cData <- foreign FFI_C "idris_bson_iter_init" (CData -> IO CData) bSonCData
+  pure $ MkIterator cData bSon
 
 iterNext : Iterator -> IO Int
-iterNext (MkIterator iterator) = do
+iterNext (MkIterator iterator _) = do
   foreign FFI_C "idris_bson_iter_next" (CData -> IO Int) iterator
 
 iterKey : Iterator -> IO String
-iterKey (MkIterator iterator) = do
+iterKey (MkIterator iterator _) = do
   foreign FFI_C "idris_bson_iter_key" (CData -> IO String) iterator
 
 iterType : Iterator -> IO Int
-iterType (MkIterator iterator) = do
+iterType (MkIterator iterator _) = do
   foreign FFI_C "idris_bson_iter_type" (CData -> IO Int) iterator
 
 typeUTF8 : IO Int
@@ -94,7 +98,7 @@ typeInt64 : IO Int
 typeInt64 = foreign FFI_C "idris_bson_type_int64" (IO Int)
 
 iterUTF8 : Iterator -> IO String
-iterUTF8 (MkIterator iterator) = do
+iterUTF8 (MkIterator iterator _) = do
   MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8"
     (CData -> IO (Raw String)) iterator
   pure utf8
@@ -105,20 +109,20 @@ UTF8Validate string =
     (String -> IO Int) string
 
 iterRecurse : Iterator -> IO (Maybe Iterator)
-iterRecurse (MkIterator iterator) = do
+iterRecurse (MkIterator iterator bSon) = do
   childCData <- foreign FFI_C "idris_bson_iter_recurse"
     (CData -> IO CData) iterator
   isError <- isCDataPtrNull childCData
   case isError of
     True => pure Nothing
-    False => pure $ Just $ MkIterator childCData
+    False => pure $ Just $ MkIterator childCData bSon
 
 iterInt32 : Iterator -> IO Bits32
-iterInt32 (MkIterator iterator) =
+iterInt32 (MkIterator iterator _) =
   foreign FFI_C "idris_bson_iter_int32"
     (CData -> IO Bits32) iterator
 
 iterInt64 : Iterator -> IO Bits64
-iterInt64 (MkIterator iterator) =
+iterInt64 (MkIterator iterator _) =
   foreign FFI_C "idris_bson_iter_int64"
     (CData -> IO Bits64) iterator
