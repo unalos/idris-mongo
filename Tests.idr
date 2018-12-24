@@ -116,6 +116,7 @@ testCloneCollectionAsCapped = do
   () <- Mongo.init ()
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
+  () <- insert collection
   let cloneCollectionAsCappedCommand =
     cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
   concern <- writeConcern {wMajority = True}
