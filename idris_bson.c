@@ -24,6 +24,13 @@ const bool idris_bson_append_int32(const CData bson,
   return bson_append_int32((bson_t *) bson->data, key, -1, value);
 }
 
+const bool idris_bson_append_int64(const CData bson_cdata,
+				   const char * key,
+				   const int64_t value)
+{
+  return bson_append_int64((bson_t *) bson_cdata->data, key, -1, value);
+}
+
 const bool idris_bson_append_utf8(const CData bson,
 				  const char * key,
 				  const char * value)

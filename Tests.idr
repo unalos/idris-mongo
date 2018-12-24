@@ -2,8 +2,11 @@ module Tests
 
 import BSon
 import ISon
+import BSonError
 import Mongo
 import Command
+import WriteConcern
+import Options
 import Client
 import Collection
 
@@ -107,3 +110,25 @@ testDropCollection = do
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- dropCollection collection
   pure ()
+
+testCloneCollectionAsCapped : IO ()
+testCloneCollectionAsCapped = do
+  () <- Mongo.init ()
+  client <- getClient ()
+  collection <- collection client "idris_mongo_test" "testCollection"
+  () <- insert collection
+  let cloneCollectionAsCappedCommand =
+    cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
+  concern <- writeConcern {wMajority = True}
+  Just opts <- options concern
+  Right reply <- writeCommand client "idris_mongo_test"
+                   cloneCollectionAsCappedCommand opts
+    | Left (WriteCommandCException error) =>
+        do
+          () <- putStrLn "WriteCommandCException"
+          message <- errorMessage error
+          putStrLn message
+    | Left BSonCommandGenerationException =>
+        putStrLn "BSonCommandGenerationException"
+  jSon <- canonicalExtendedJSon reply
+  putStrLn jSon

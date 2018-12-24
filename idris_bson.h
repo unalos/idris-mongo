@@ -6,6 +6,10 @@ const bool idris_bson_append_int32(const CData bson,
 				   const char * key,
 				   const int32_t value);
 
+const bool idris_bson_append_int64(const CData bson_cdata,
+				   const char * key,
+				   const int64_t value);
+
 const bool idris_bson_append_utf8(const CData bson,
 				  const char * key,
 				  const char * value);

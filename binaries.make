@@ -1,6 +1,9 @@
-CFLAGS=$(shell idris --include) $(shell pkg-config --cflags libmongoc-1.0)
+CFLAGS=-Werror $(shell idris --include) $(shell pkg-config --cflags libmongoc-1.0)
 
-all: idris_common.o idris_bson.o idris_mongo.o idris_mongo_client.o idris_mongo_collection.o
+SOURCES = $(wildcard *.c)
+OBJECTS = $(patsubst %.c, %.o, $(SOURCES))
+
+all: $(OBJECTS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $^
