@@ -93,6 +93,10 @@ typeUTF8 = foreign FFI_C "idris_bson_type_utf8" (IO Int)
 typeDocument : IO Int
 typeDocument = foreign FFI_C "idris_bson_type_document" (IO Int)
 
+iterInt32 : Iterator -> IO Bits32
+iterInt32 (MkIterator iterator) =
+  foreign FFI_C "idris_bson_iter_int32" (CData -> IO Bits32) iterator
+
 iterUTF8 : Iterator -> IO String
 iterUTF8 (MkIterator iterator) = do
   MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8" (CData -> IO (Raw String)) iterator
@@ -102,7 +106,3 @@ UTF8Validate : String -> IO (Maybe ())
 UTF8Validate string =
   handleSuccessCode $ foreign FFI_C "idris_bson_utf8_validate"
     (String -> IO Int) string
-
-iterInt32 : Iterator -> IO Bits32
-iterInt32 (MkIterator iterator) =
-  foreign FFI_C "idris_bson_iter_int32" (CData -> IO Bits32) iterator

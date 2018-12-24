@@ -18,19 +18,21 @@ mutual
   data Document : Type where
     MkDocument : List (String, Value) -> Document
 
-Show Value where
-  show (Int32Value int32) = show int32
-  show (Int64Value int64) = show int64
-  show (UTF8Value string) = show string
-  show (DocumentValue document) = show document
+mutual
 
-Show Document where
-  show (MkDocument keyValues) = "{" ++ (aux "" True keyValues) ++ "}" where
-    aux : String -> Bool -> List (String, Value) -> String
-    aux accu beginning ((key, value)::tail) =
-      let commaOrNothing = if beginning then "" else ", " in
-      aux (commaOrNothing ++ (show key) ++ ": " ++ (show value)) False tail
-    aux accu _ [] = accu
+  Show Value where
+    show (Int32Value int32) = show int32
+    show (Int64Value int64) = show int64
+    show (UTF8Value string) = show string
+    show (DocumentValue document) = show document
+
+  Show Document where
+    show (MkDocument keyValues) = "{" ++ (aux "" True keyValues) ++ "}" where
+      aux : String -> Bool -> List (String, Value) -> String
+      aux accu beginning ((key, value)::tail) =
+        let commaOrNothing = if beginning then "" else ", " in
+        aux (commaOrNothing ++ (show key) ++ ": " ++ (show value)) False tail
+      aux accu _ [] = accu
 
 private
 cond : List (Lazy Bool, Lazy a) -> a -> a
