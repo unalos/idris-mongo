@@ -5,8 +5,10 @@ import BSon
 import ISon
 import BSonError
 import Mongo
+import ReadPreferences
 import Command
 import WriteConcern
+import ReadConcern
 import Options
 import Client
 import Collection
@@ -123,7 +125,7 @@ testCloneCollectionAsCapped = do
   let cloneCollectionAsCappedCommand =
     cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
   concern <- writeConcern {wMajority = True}
-  Just opts <- options concern
+  Just opts <- writeConcernOptions concern
   Right reply <- writeCommand client "idris_mongo_test"
                    cloneCollectionAsCappedCommand opts
     | Left (WriteCommandCException error) => do
@@ -142,6 +144,20 @@ testDistinct : IO ()
 testDistinct = do
   () <- Mongo.init ()
   client <- getClient ()
-  let distinctCommand = distinct
-  -- TODO
+  let query = MkDocument [
+    ("y", DocumentValue $ MkDocument [
+      ("$gt", UTF8Value "one")
+    ])
+  ]
+  let distinctCommand = distinct "testCollection" "hello" query
+  readPrefs <- readPreferences SECONDARY
+  concern <- readConcern {level = Just MAJORITY}
+  Just opts <- readConcernOptions concern (MkDocument [
+    ("collation", DocumentValue $ MkDocument [
+      ("locale", UTF8Value "en_us"),
+      ("caseFirst", UTF8Value "lower")
+    ])])
+  Right reply <- readCommand client "idris_mongo_test"
+    distinctCommand readPrefs opts
+    | Left _ => exitWith (ExitFailure (-1))
   cleanUp ()

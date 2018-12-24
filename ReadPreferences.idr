@@ -1,5 +1,9 @@
 module ReadPreferences
 
+%lib     C "mongoc-1.0"
+%link    C "idris_mongo_read_preferences.o"
+%include C "idris_mongo_read_preferences.h"
+
 %access private
 
 public export
