@@ -72,10 +72,10 @@ mutual
       int32    <- typeInt32
       int64    <- typeInt64
       cond [
-        (typeCode == utf8,     extractUTF8 iterator),
+        (typeCode == utf8,     extractUTF8     iterator),
         (typeCode == document, extractDocument iterator),
-        (typeCode == int32,    extractInt32 iterator),
-        (typeCode == int64,    extractInt64 iterator)
+        (typeCode == int32,    extractInt32    iterator),
+        (typeCode == int64,    extractInt64    iterator)
       ] (pure Nothing)
     where
 
