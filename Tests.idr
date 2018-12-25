@@ -56,6 +56,13 @@ assertJust expression = do
     | Nothing => pure (Failure Nothing)
   pure Success
 
+private
+assertEquals : Eq a => Show a => a -> a -> IO TestOutcome
+assertEquals x y =
+  case x == y of
+    True => pure Success
+    False => pure $ Failure $ Just ((show x) ++ " does not equal " ++ (show y))
+
 testBSonFromJSon : IO ()
 testBSonFromJSon = test "testBSonFromJSon" $ do
   assertJust $ fromJSon "{ \"hello\" : \"world\" }"
@@ -82,16 +89,13 @@ testRelaxedJSon = test "testRelaxedJSon" $ do
   Just bSon <- bSon document
     | Nothing => pure (Failure $ Just "bSon conversion failed.")
   jSon <- relaxedExtendedJSon bSon
-  case (jSon == documentJSon) of
-    True => pure Success
-    False => pure $ Failure $ Just jSon
+  assertEquals jSon documentJSon
 
 testCanonicalJSon : IO ()
-testCanonicalJSon = do
+testCanonicalJSon = test "testCanonicalJSon" $ do
   Just bSon <- bSon document
   jSon <- canonicalExtendedJSon bSon
-  let True = jSon == "{ \"hello\" : \"world\" }"
-  pure ()
+  assertEquals jSon "{ \"hello\" : \"world\" }"
 
 private
 getClient : () -> IO Client
