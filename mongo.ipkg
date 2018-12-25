@@ -26,7 +26,7 @@ makefile = binaries.make
 
 tests = Tests.testBSonFromJSon
       , Tests.testRelaxedJSon
-			, Tests.testCanonicalJSon
+      , Tests.testCanonicalJSon
       , Tests.testPing
       , Tests.testDataBase
       , Tests.testInsertCollection
