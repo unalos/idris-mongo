@@ -9,10 +9,10 @@ mutual
 
   public export
   data Value : Type where
-    UTF8Value     : String -> Value
+    UTF8Value     : String   -> Value
     DocumentValue : Document -> Value
-    Int32Value    : Bits32 -> Value
-    Int64Value    : Bits64 -> Value
+    Int32Value    : Bits32   -> Value
+    Int64Value    : Bits64   -> Value
 
   public export
   data Document : Type where
