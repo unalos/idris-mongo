@@ -6,8 +6,8 @@ import ISon
 import Mongo
 import Client
 
-%lib C "mongoc-1.0"
-%link C "idris_mongo_collection.o"
+%lib     C "mongoc-1.0"
+%link    C "idris_mongo_collection.o"
 %include C "idris_mongo_collection.h"
 
 %access export
@@ -49,7 +49,7 @@ insertMany (MkCollection collection) documents =
       0 => pure Nothing
       _ => pure $ Just ()
   where
-  
+
     auxToBSons : IO (Maybe (List BSon)) -> List Document -> IO (Maybe (List BSon))
     auxToBSons bSonsIO (head::tail) = do
       Just bSons <- bSonsIO
