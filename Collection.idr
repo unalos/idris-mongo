@@ -21,35 +21,34 @@ collection (MkClient client) db name = do
     (CData -> String -> String -> IO CData) client db name
   pure $ MkCollection cData
 
-dropCollection : Collection -> IO (Maybe ())
-dropCollection (MkCollection collection) = do
-  success <- foreign FFI_C "idris_mongoc_collection_drop_with_opts"
-    (CData -> IO Int) collection
+private
+handleSuccessCode : IO Int -> IO (Maybe ())
+handleSuccessCode successIO = do
+  success <- successIO
   case success of
     0 => pure Nothing
     _ => pure $ Just ()
+
+dropCollection : Collection -> IO (Maybe ())
+dropCollection (MkCollection collection) = do
+  handleSuccessCode $ foreign FFI_C "idris_mongoc_collection_drop_with_opts"
+    (CData -> IO Int) collection
 
 insertOne : Collection -> Document -> IO (Maybe ())
 insertOne (MkCollection collection) document = do
   Just (MkBSon bSonDocument) <- bSon document
     | Nothing => pure Nothing
-  success <- foreign FFI_C "idris_mongoc_collection_insert_one"
+  handleSuccessCode $ foreign FFI_C "idris_mongoc_collection_insert_one"
     (CData -> CData -> IO Int) collection bSonDocument
-  case success of
-    0 => pure Nothing
-    _ => pure $ Just ()
 
 insertMany : Collection -> List Document -> IO (Maybe ())
 insertMany (MkCollection collection) documents =
   do
     Just bSons <- auxToBSons (pure $ Just []) documents
       | Nothing => pure Nothing
-    success <- foreign FFI_C "idris_mongoc_collection_insert_many"
+    handleSuccessCode $ foreign FFI_C "idris_mongoc_collection_insert_many"
       (CData -> Raw (List BSon) -> Int -> IO Int)
       collection (MkRaw bSons) (size bSons)
-    case success of
-      0 => pure Nothing
-      _ => pure $ Just ()
   where
 
     auxToBSons : IO (Maybe (List BSon)) -> List Document

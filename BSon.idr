@@ -16,6 +16,7 @@ bSon () = do
   cData <- foreign FFI_C "idris_bson_new" (IO CData)
   pure $ MkBSon cData
 
+private
 handleSuccessCode : IO Int -> IO (Maybe ())
 handleSuccessCode successIO = do
   success <- successIO
