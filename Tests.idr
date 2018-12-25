@@ -26,28 +26,27 @@ data TestOutcome =
   | Failure (Maybe String)
 
 private
-test : String -> IO TestOutcome -> IO ()
-test testName testProcedure = do
-  outcome <- testProcedure
-  case outcome of
-    Success =>
-      putStrLn ("Test " ++ testName ++ " passed.")
-    Failure Nothing => do
-      () <- putStrLn ("Test " ++ testName ++ " failed.")
-      exitWith (ExitFailure (-1))
-    Failure (Just message) => do
-      () <- putStrLn ("Test " ++ testName ++ " failed: " ++ message)
-      exitWith (ExitFailure (-1))
-
---private
---failWith : String -> IO ()
---failWith message = do
---  () <- putStrLn message
---  exitWith (ExitFailure (-1))
-
---private
---succeedsWith : String -> IO ()
---succeedsWith message = putStrLn message
+test : String
+       -> {default Nothing before : Maybe (Lazy (IO ()))}
+       -> {default Nothing after : Maybe (Lazy (IO ()))}
+       -> IO TestOutcome -> IO ()
+test testName {before} {after} testProcedure = do
+    () <- setUp before
+    outcome <- testProcedure
+    () <- setUp after
+    case outcome of
+      Success =>
+        putStrLn ("Test " ++ testName ++ " passed.")
+      Failure Nothing => do
+        () <- putStrLn ("Test " ++ testName ++ " failed.")
+        exitWith (ExitFailure (-1))
+      Failure (Just message) => do
+        () <- putStrLn ("Test " ++ testName ++ " failed: " ++ message)
+        exitWith (ExitFailure (-1))
+  where
+    setUp : Maybe (Lazy (IO ())) -> IO ()
+    setUp Nothing = pure ()
+    setUp (Just action) = action
 
 private
 assertJust : IO (Maybe t) -> IO TestOutcome
@@ -81,21 +80,25 @@ document = MkDocument
   ]
 
 private
-documentJSon : String
-documentJSon = "{ \"String\" : \"string\", \"Int32\" : 42, \"Int64\" : 42, \"Subdocument\" : { \"foo\" : \"bar\" } }"
+documentRelaxedJSon : String
+documentRelaxedJSon = "{ \"String\" : \"string\", \"Int32\" : 42, \"Int64\" : 42, \"Subdocument\" : { \"foo\" : \"bar\" } }"
+
+private
+documentCanonicalJSon : String
+documentCanonicalJSon = "{ \"String\" : \"string\", \"Int32\" : { \"$numberInt\" : \"42\" }, \"Int64\" : { \"$numberLong\" : \"42\"}, \"Subdocument\" : { \"foo\" : \"bar\" } }"
 
 testRelaxedJSon : IO ()
 testRelaxedJSon = test "testRelaxedJSon" $ do
   Just bSon <- bSon document
     | Nothing => pure (Failure $ Just "bSon conversion failed.")
   jSon <- relaxedExtendedJSon bSon
-  assertEquals jSon documentJSon
+  assertEquals jSon documentRelaxedJSon
 
 testCanonicalJSon : IO ()
 testCanonicalJSon = test "testCanonicalJSon" $ do
   Just bSon <- bSon document
   jSon <- canonicalExtendedJSon bSon
-  assertEquals jSon "{ \"hello\" : \"world\" }"
+  assertEquals jSon documentCanonicalJSon
 
 private
 getClient : () -> IO Client
@@ -111,67 +114,46 @@ ping client = do
   canonicalExtendedJSon reply
 
 testPing : IO ()
-testPing = do
-  () <- Mongo.init ()
+testPing = test "testPing" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
   client <- getClient ()
   pingReply <- ping client
-  let True = pingReply == "{ \"ok\" : { \"$numberDouble\" : \"1.0\" } }"
-  cleanUp ()
+  assertEquals pingReply "{ \"ok\" : { \"$numberDouble\" : \"1.0\" } }"
 
 testDataBase : IO ()
-testDataBase = do
-  () <- Mongo.init ()
+testDataBase = test "testDataBase" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
   client <- getClient ()
   dataBase <- dataBase client "idris_mongo_test"
-  cleanUp()
-
-private
-printDocument : Document -> IO ()
-printDocument document =
-  do Just bSon <- bSon document
-     Just action <- fold aux (pure ()) bSon
-     action
-  where
-    aux : IO () -> String -> Value -> IO ()
-    aux accu key value = do
-      () <- accu
-      putStrLn key
-      putStrLn (show value)
+  pure Success
 
 private
 insert : Collection -> IO ()
 insert collection = do
-  () <- printDocument document
   Just () <- insertOne collection document
   pure ()
 
 testInsertCollection : IO ()
-testInsertCollection = do
-  () <- Mongo.init ()
+testInsertCollection = test "testInsertCollection" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   () <- insert collection
-  cleanUp ()
+  pure Success
 
 testInsertMany : IO ()
-testInsertMany = do
-  () <- Mongo.init ()
+testInsertMany = test "testInsertMany" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- insertMany collection [document, document]
-  cleanUp ()
+  pure Success
 
 testDropCollection : IO ()
-testDropCollection = do
-  () <- Mongo.init ()
+testDropCollection = test "testDropCollection" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- dropCollection collection
-  cleanUp ()
+  pure Success
 
 testCloneCollectionAsCapped : IO ()
-testCloneCollectionAsCapped = do
-  () <- Mongo.init ()
+testCloneCollectionAsCapped = test "testCloneCollectionAsCapped" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
   client <- getClient ()
   srcCollection <- collection client "idris_mongo_test" "testCollection"
   () <- insert srcCollection
@@ -191,31 +173,28 @@ testCloneCollectionAsCapped = do
     | Left BSonWriteCommandGenerationException => do
         () <- putStrLn "BSonCommandGenerationException"
         exitWith (ExitFailure (-1))
-  jSon <- canonicalExtendedJSon reply
-  () <- putStrLn jSon
-  cleanUp ()
+  pure Success
 
---testDistinct : IO ()
---testDistinct = do
---  () <- Mongo.init ()
---  client <- getClient ()
---  let query = MkDocument [
---    ("y", DocumentValue $ MkDocument [
---      ("$gt", UTF8Value "one")
---    ])
---  ]
---  let distinctCommand = distinct "testCollection" "hello" query
---  readPrefs <- readPreferences SECONDARY
---  concern <- readConcern {level = Just MAJORITY}
---  Just opts <- readConcernOptions concern (MkDocument [
---    ("collation", DocumentValue $ MkDocument [
---      ("locale", UTF8Value "en_US"),
---      ("caseFirst", UTF8Value "lower")
---    ])])
---    | Nothing => failWith "Could not create read concern options"
---  Right reply <- readCommand client "idris_mongo_test"
---    distinctCommand readPrefs opts
---    | Left error => do
---      errorMessage <- show error
---      failWith errorMessage
---  cleanUp ()
+testDistinct : IO ()
+testDistinct = test "testDistinct" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+  client <- getClient ()
+  let query = MkDocument [
+    ("y", DocumentValue $ MkDocument [
+      ("$gt", UTF8Value "one")
+    ])
+  ]
+  let distinctCommand = distinct "testCollection" "hello" query
+  readPrefs <- readPreferences SECONDARY
+  concern <- readConcern {level = Just MAJORITY}
+  Just opts <- readConcernOptions concern (MkDocument [
+    ("collation", DocumentValue $ MkDocument [
+      ("locale", UTF8Value "en_US"),
+      ("caseFirst", UTF8Value "lower")
+    ])])
+    | Nothing => pure (Failure Nothing)
+  Right reply <- readCommand client "idris_mongo_test"
+    distinctCommand readPrefs opts
+    | Left error => do
+      errorMessage <- show error
+      pure $ Failure Nothing
+  pure Success
