@@ -11,6 +11,7 @@ import Client
 %include C "idris_mongo_collection.h"
 
 %access export
+%default covering
 
 data Collection = MkCollection CData
 
