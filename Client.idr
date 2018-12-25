@@ -31,11 +31,13 @@ data APIVersion =
 
 private
 apiVersionLegacy : IO Int
-apiVersionLegacy = foreign FFI_C "idris_mongoc_error_api_version_legacy" (IO Int)
+apiVersionLegacy =
+  foreign FFI_C "idris_mongoc_error_api_version_legacy" (IO Int)
 
 private
 apiVersion2 : IO Int
-apiVersion2 = foreign FFI_C "idris_mongoc_error_api_version_2" (IO Int)
+apiVersion2 =
+  foreign FFI_C "idris_mongoc_error_api_version_2" (IO Int)
 
 private
 versionAsInt : APIVersion -> IO Int
