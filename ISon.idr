@@ -54,18 +54,14 @@ mutual
   private
   foldIterator : (acc -> String -> Value -> acc) -> acc
                  -> Iterator -> IO (Maybe acc)
-  foldIterator func init iterator =
-      aux iterator init
-    where
-      aux : Iterator -> acc -> IO (Maybe acc)
-      aux iterator acc = do
-        code <- iterNext iterator
-        case code of
-          0 => pure $ Just acc
-          _ => do
-            key <- iterKey iterator
-            Just value <- iterValue iterator
-            aux iterator (func acc key value)
+  foldIterator func accu iterator = do
+    code <- iterNext iterator
+    case code of
+      0 => pure $ Just accu
+      _ => do
+        key <- iterKey iterator
+        Just value <- iterValue iterator
+        foldIterator func (func accu key value) iterator
 
   private
   iterValue : Iterator -> IO (Maybe Value)
