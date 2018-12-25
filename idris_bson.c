@@ -3,7 +3,7 @@
 
 static void noop() {}
 
-void idris_bson_finalize(void * bson)
+static void idris_bson_finalize(void * bson)
 {
   bson_destroy(bson);
 }
