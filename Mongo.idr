@@ -4,8 +4,8 @@ import Common
 import BSon
 import ISon
 
-%lib C "mongoc-1.0"
-%link C "idris_mongo.o"
+%lib     C "mongoc-1.0"
+%link    C "idris_mongo.o"
 %include C "idris_mongo.h"
 
 %access export
