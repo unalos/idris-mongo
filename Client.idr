@@ -13,6 +13,7 @@ import ReadPreferences
 %include C "idris_mongo_client.h"
 
 %access export
+%default covering
 
 public export
 data Client = MkClient CData
