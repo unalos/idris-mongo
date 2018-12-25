@@ -5,6 +5,7 @@ module ReadPreferences
 %include C "idris_mongo_read_preferences.h"
 
 %access private
+%default total
 
 public export
 data ReadMode =
