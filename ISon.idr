@@ -84,7 +84,7 @@ mutual
         utf8Value <- iterUTF8 iterator
         Just () <- UTF8Validate utf8Value
           | Nothing => pure Nothing
-        pure $ Just (UTF8Value utf8Value)
+        pure $ Just $ UTF8Value utf8Value
 
       extractDocument : Iterator -> IO (Maybe Value)
       extractDocument iterator = do
@@ -92,17 +92,17 @@ mutual
           | Nothing => pure Nothing
         Just document <- documentValue childIterator
           | Nothing => pure Nothing
-        pure $ Just (DocumentValue document)
+        pure $ Just $ DocumentValue document
 
       extractInt32 : Iterator -> IO (Maybe Value)
       extractInt32 iterator = do
         int32Value <- iterInt32 iterator
-        pure $ Just (Int32Value int32Value)
+        pure $ Just $ Int32Value int32Value
 
       extractInt64 : Iterator -> IO (Maybe Value)
       extractInt64 iterator = do
         int64Value <- iterInt64 iterator
-        pure $ Just (Int64Value int64Value)
+        pure $ Just $ Int64Value int64Value
 
 partial
 fold : (acc -> String -> Value -> acc) -> acc
