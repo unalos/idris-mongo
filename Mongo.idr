@@ -21,9 +21,9 @@ data URI = MkURI CData
 
 uri : String -> IO (Maybe URI)
 uri uriString = do
-  cData <- foreign FFI_C "idris_mongoc_uri_new_with_error"
+  uri <- foreign FFI_C "idris_mongoc_uri_new_with_error"
     (String -> IO CData) uriString
-  isError <- isCDataPtrNull cData
+  isError <- isCDataPtrNull uri
   case isError of
     True => pure Nothing
-    False => pure (Just $ MkURI cData)
+    False => pure $ Just $ MkURI uri
