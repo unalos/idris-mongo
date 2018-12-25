@@ -101,6 +101,12 @@ testCanonicalJSon = test "testCanonicalJSon" $ do
   assertEquals jSon documentCanonicalJSon
 
 private
+mongoTest : String -> IO TestOutcome -> IO ()
+mongoTest testName = test testName
+  {before = Just $ Mongo.init ()}
+  {after = Just $ cleanUp ()}
+
+private
 getClient : () -> IO Client
 getClient () = do
   Just uri <- uri uriString
@@ -114,13 +120,13 @@ ping client = do
   canonicalExtendedJSon reply
 
 testPing : IO ()
-testPing = test "testPing" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testPing = mongoTest "testPing" $ do
   client <- getClient ()
   pingReply <- ping client
   assertEquals pingReply "{ \"ok\" : { \"$numberDouble\" : \"1.0\" } }"
 
 testDataBase : IO ()
-testDataBase = test "testDataBase" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testDataBase = mongoTest "testDataBase" $ do
   client <- getClient ()
   dataBase <- dataBase client "idris_mongo_test"
   pure Success
@@ -132,28 +138,28 @@ insert collection = do
   pure ()
 
 testInsertCollection : IO ()
-testInsertCollection = test "testInsertCollection" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testInsertCollection = mongoTest "testInsertCollection" $ do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   () <- insert collection
   pure Success
 
 testInsertMany : IO ()
-testInsertMany = test "testInsertMany" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testInsertMany = mongoTest "testInsertMany" $ do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- insertMany collection [document, document]
   pure Success
 
 testDropCollection : IO ()
-testDropCollection = test "testDropCollection" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testDropCollection = mongoTest "testDropCollection" $ do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- dropCollection collection
   pure Success
 
 testCloneCollectionAsCapped : IO ()
-testCloneCollectionAsCapped = test "testCloneCollectionAsCapped" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testCloneCollectionAsCapped = mongoTest "testCloneCollectionAsCapped" $ do
   client <- getClient ()
   srcCollection <- collection client "idris_mongo_test" "testCollection"
   () <- insert srcCollection
@@ -176,7 +182,7 @@ testCloneCollectionAsCapped = test "testCloneCollectionAsCapped" {before = Just 
   pure Success
 
 testDistinct : IO ()
-testDistinct = test "testDistinct" {before = Just $ Mongo.init ()} {after = Just $ cleanUp ()} $ do
+testDistinct = mongoTest "testDistinct" $ do
   client <- getClient ()
   let query = MkDocument [
     ("y", DocumentValue $ MkDocument [
