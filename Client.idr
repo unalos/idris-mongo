@@ -57,10 +57,9 @@ clientSetErrorAPI (MkClient client) version = do
 private
 clientSetAppName : Client -> String -> IO (Maybe ())
 clientSetAppName (MkClient client) appName = do
-  successCode <-
-    foreign FFI_C "idris_mongoc_client_set_appname"
-      (CData -> String -> IO Int) client appName
-  case successCode of
+  success <- foreign FFI_C "idris_mongoc_client_set_appname"
+    (CData -> String -> IO Int) client appName
+  case success of
     0 => pure Nothing
     _ => pure $ Just ()
 
