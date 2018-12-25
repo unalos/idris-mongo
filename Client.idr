@@ -105,11 +105,12 @@ data ReadCommandException =
     ReadCommandCException BSonError
   | BSonReadCommandGenerationException
 
-Show ReadCommandException where
-  show (ReadCommandCException error) =
-    "ReadCommandCException: " ++ (show error)
-  show (BSonReadCommandGenerationException) =
-    "BSonReadCommandGenerationException"
+show : ReadCommandException -> IO String
+show (ReadCommandCException error) = do
+  errorMessage <- show error
+  pure $ "ReadCommandCException: " ++ errorMessage
+show (BSonReadCommandGenerationException) =
+  pure "BSonReadCommandGenerationException"
 
 readCommand : Client -> String -> Document -> ReadPreferences
               -> Options -> IO (Either ReadCommandException BSon)

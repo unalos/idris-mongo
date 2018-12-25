@@ -104,10 +104,12 @@ fold func init bSon = do
 
 bSon : Document -> IO (Maybe BSon)
 bSon (MkDocument entries) =
-  foldl append (pure init) entries where
+  foldl append init entries where
 
-  init : Maybe BSon
-  init = Just $ BSon.bSon ()
+  init : IO (Maybe BSon)
+  init = do
+    bSon <- BSon.bSon ()
+    pure $ Just bSon
 
   appendUsing : (BSon -> String -> t -> IO (Maybe ()))
     -> IO (Maybe BSon) -> String -> t -> IO (Maybe BSon)

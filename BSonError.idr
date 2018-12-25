@@ -14,11 +14,11 @@ newErrorPlaceholder () = do
   errorPlaceholder <- foreign FFI_C "idris_bson_error_new" (IO CData)
   pure $ MkBSonError errorPlaceholder
 
-errorMessage : BSonError -> String
-errorMessage (MkBSonError error) = unsafePerformIO $ do
+errorMessage : BSonError -> IO String
+errorMessage (MkBSonError error) = do
   MkRaw message <- foreign FFI_C "idris_bson_error_message"
     (CData -> IO (Raw String)) error
   pure message
 
-Show BSonError where
-  show error = errorMessage error
+show : BSonError -> IO String
+show error = errorMessage error

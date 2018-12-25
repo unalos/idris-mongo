@@ -130,7 +130,7 @@ testCloneCollectionAsCapped = do
                    cloneCollectionAsCappedCommand opts
     | Left (WriteCommandCException error) => do
         () <- putStrLn "WriteCommandCException"
-        let message = errorMessage error
+        message <- errorMessage error
         () <- putStrLn message
         exitWith (ExitFailure (-1))
     | Left BSonWriteCommandGenerationException => do
@@ -165,5 +165,7 @@ testDistinct = do
     | Nothing => failWith "Could not create read concern options"
   Right reply <- readCommand client "idris_mongo_test"
     distinctCommand readPrefs opts
-    | Left error => failWith (show error)
+    | Left error => do
+      errorMessage <- show error
+      failWith errorMessage
   cleanUp ()
