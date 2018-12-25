@@ -145,7 +145,7 @@ const VAL idris_bson_iter_utf8(const CData iter_cdata)
 }
 
 const CData idris_bson_iter_recurse(const CData iter_cdata) {
-  bson_iter_t * child;
+  bson_iter_t * child = NULL;
   const bson_iter_t * iter = (const bson_iter_t *) iter_cdata->data;
   const bool success = bson_iter_recurse(iter, child);
   if (!success)
