@@ -16,9 +16,9 @@ import Client
 data Collection = MkCollection CData
 
 collection : Client -> String -> String -> IO Collection
-collection (MkClient clientCData) db name = do
+collection (MkClient client) db name = do
   cData <- foreign FFI_C "idris_mongoc_client_get_collection"
-    (CData -> String -> String -> IO CData) clientCData db name
+    (CData -> String -> String -> IO CData) client db name
   pure $ MkCollection cData
 
 dropCollection : Collection -> IO (Maybe ())
