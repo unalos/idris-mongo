@@ -6,33 +6,33 @@ static void idris_mongoc_read_concern_finalize(void * read_concern)
   mongoc_read_concern_destroy(read_concern);
 }
 
-const CData idris_mongoc_read_concern_new()
+CData idris_mongoc_read_concern_new()
 {
   mongoc_read_concern_t * read_concern = mongoc_read_concern_new();
   return cdata_manage(read_concern, 0, idris_mongoc_read_concern_finalize);
 }
 
-const VAL idris_mongoc_read_concern_level_local()
+VAL idris_mongoc_read_concern_level_local()
 {
   return MKSTR(get_vm(), MONGOC_READ_CONCERN_LEVEL_LOCAL);
 }
 
-const VAL idris_mongoc_read_concern_level_majority()
+VAL idris_mongoc_read_concern_level_majority()
 {
   return MKSTR(get_vm(), MONGOC_READ_CONCERN_LEVEL_MAJORITY);
 }
 
-const VAL idris_mongoc_read_concern_level_linearizable()
+VAL idris_mongoc_read_concern_level_linearizable()
 {
   return MKSTR(get_vm(), MONGOC_READ_CONCERN_LEVEL_LINEARIZABLE);
 }
 
-const VAL idris_mongoc_read_concern_level_available()
+VAL idris_mongoc_read_concern_level_available()
 {
   return MKSTR(get_vm(), MONGOC_READ_CONCERN_LEVEL_AVAILABLE);
 }
 
-const VAL idris_mongoc_read_concern_level_snapshot()
+VAL idris_mongoc_read_concern_level_snapshot()
 {
   return MKSTR(get_vm(), MONGOC_READ_CONCERN_LEVEL_SNAPSHOT);
 }

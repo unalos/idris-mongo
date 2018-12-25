@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Werror $(shell idris --include) $(shell pkg-config --cflags libmongoc-1.0)
+CFLAGS=-Wall -Wignored-qualifiers -Werror $(shell idris --include) $(shell pkg-config --cflags libmongoc-1.0)
 
 SOURCES = $(wildcard *.c)
 OBJECTS = $(patsubst %.c, %.o, $(SOURCES))

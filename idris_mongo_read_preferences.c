@@ -31,7 +31,7 @@ static void idris_mongoc_read_prefs_finalize(void * read_prefs)
   mongoc_read_prefs_destroy(read_prefs);
 }
 
-const CData idris_mongoc_read_prefs_new(int read_mode)
+CData idris_mongoc_read_prefs_new(int read_mode)
 {
   mongoc_read_prefs_t * read_prefs = mongoc_read_prefs_new(read_mode);
   return cdata_manage(read_prefs, 0, idris_mongoc_read_prefs_finalize);
