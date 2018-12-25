@@ -26,14 +26,18 @@ data TestOutcome =
   | Failure (Maybe String)
 
 private
+noop : IO ()
+noop = pure ()
+
+private
 test : String
-       -> {default Nothing before : Maybe (Lazy (IO ()))}
-       -> {default Nothing after : Maybe (Lazy (IO ()))}
-       -> IO TestOutcome -> IO ()
+       -> {default noop before : Lazy (IO t)}
+       -> {default noop after : Lazy (IO ())}
+       -> (t -> IO TestOutcome) -> IO ()
 test testName {before} {after} testProcedure = do
-    () <- setUp before
-    outcome <- testProcedure
-    () <- setUp after
+    initialized <- before
+    outcome <- testProcedure initialized
+    () <- after
     case outcome of
       Success =>
         putStrLn ("Test " ++ testName ++ " passed.")
@@ -43,10 +47,6 @@ test testName {before} {after} testProcedure = do
       Failure (Just message) => do
         () <- putStrLn ("Test " ++ testName ++ " failed: " ++ message)
         exitWith (ExitFailure (-1))
-  where
-    setUp : Maybe (Lazy (IO ())) -> IO ()
-    setUp Nothing = pure ()
-    setUp (Just action) = action
 
 private
 assertJust : IO (Maybe t) -> IO TestOutcome
@@ -63,8 +63,10 @@ assertEquals x y =
     False => pure $ Failure $ Just ((show x) ++ " does not equal " ++ (show y))
 
 testBSonFromJSon : IO ()
-testBSonFromJSon = test "testBSonFromJSon" $ do
-  assertJust $ fromJSon "{ \"hello\" : \"world\" }"
+testBSonFromJSon = test "testBSonFromJSon" procedure where
+  procedure : () -> IO TestOutcome
+  procedure () = do
+    assertJust $ fromJSon "{ \"hello\" : \"world\" }"
 
 private
 document : Document
@@ -88,23 +90,21 @@ documentCanonicalJSon : String
 documentCanonicalJSon = "{ \"String\" : \"string\", \"Int32\" : { \"$numberInt\" : \"42\" }, \"Int64\" : { \"$numberLong\" : \"42\"}, \"Subdocument\" : { \"foo\" : \"bar\" } }"
 
 testRelaxedJSon : IO ()
-testRelaxedJSon = test "testRelaxedJSon" $ do
-  Just bSon <- bSon document
-    | Nothing => pure (Failure $ Just "bSon conversion failed.")
-  jSon <- relaxedExtendedJSon bSon
-  assertEquals jSon documentRelaxedJSon
+testRelaxedJSon = test "testRelaxedJSon" procedure where
+  procedure : () -> IO TestOutcome
+  procedure () = do
+    Just bSon <- bSon document
+      | Nothing => pure (Failure $ Just "bSon conversion failed.")
+    jSon <- relaxedExtendedJSon bSon
+    assertEquals jSon documentRelaxedJSon
 
 testCanonicalJSon : IO ()
-testCanonicalJSon = test "testCanonicalJSon" $ do
-  Just bSon <- bSon document
-  jSon <- canonicalExtendedJSon bSon
-  assertEquals jSon documentCanonicalJSon
-
-private
-mongoTest : String -> IO TestOutcome -> IO ()
-mongoTest testName = test testName
-  {before = Just $ Mongo.init ()}
-  {after = Just $ cleanUp ()}
+testCanonicalJSon = test "testCanonicalJSon" procedure where
+  procedure : () -> IO TestOutcome
+  procedure () = do
+    Just bSon <- bSon document
+    jSon <- canonicalExtendedJSon bSon
+    assertEquals jSon documentCanonicalJSon
 
 private
 getClient : () -> IO Client
@@ -114,22 +114,33 @@ getClient () = do
   pure client
 
 private
+mongoTest : String -> (Client -> IO TestOutcome) -> IO ()
+mongoTest testName = test testName
+  {before = (do
+    () <- Mongo.init ()
+    client <- getClient ()
+    pure client)}
+  {after = cleanUp ()}
+
+private
 ping : Client -> IO String
 ping client = do
   Just reply <- simpleCommand client "admin" Command.ping
   canonicalExtendedJSon reply
 
 testPing : IO ()
-testPing = mongoTest "testPing" $ do
-  client <- getClient ()
-  pingReply <- ping client
-  assertEquals pingReply "{ \"ok\" : { \"$numberDouble\" : \"1.0\" } }"
+testPing = mongoTest "testPing" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    pingReply <- ping client
+    assertEquals pingReply "{ \"ok\" : { \"$numberDouble\" : \"1.0\" } }"
 
 testDataBase : IO ()
-testDataBase = mongoTest "testDataBase" $ do
-  client <- getClient ()
-  dataBase <- dataBase client "idris_mongo_test"
-  pure Success
+testDataBase = mongoTest "testDataBase" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    dataBase <- dataBase client "idris_mongo_test"
+    pure Success
 
 private
 insert : Collection -> IO ()
@@ -138,69 +149,74 @@ insert collection = do
   pure ()
 
 testInsertCollection : IO ()
-testInsertCollection = mongoTest "testInsertCollection" $ do
-  client <- getClient ()
-  collection <- collection client "idris_mongo_test" "testCollection"
-  () <- insert collection
-  pure Success
+testInsertCollection = mongoTest "testInsertCollection" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    collection <- collection client "idris_mongo_test" "testCollection"
+    () <- insert collection
+    pure Success
 
 testInsertMany : IO ()
-testInsertMany = mongoTest "testInsertMany" $ do
-  client <- getClient ()
-  collection <- collection client "idris_mongo_test" "testCollection"
-  Just () <- insertMany collection [document, document]
-  pure Success
+testInsertMany = mongoTest "testInsertMany" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    collection <- collection client "idris_mongo_test" "testCollection"
+    Just () <- insertMany collection [document, document]
+    pure Success
 
 testDropCollection : IO ()
-testDropCollection = mongoTest "testDropCollection" $ do
-  client <- getClient ()
-  collection <- collection client "idris_mongo_test" "testCollection"
-  Just () <- dropCollection collection
-  pure Success
+testDropCollection = mongoTest "testDropCollection" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    collection <- collection client "idris_mongo_test" "testCollection"
+    Just () <- dropCollection collection
+    pure Success
 
 testCloneCollectionAsCapped : IO ()
-testCloneCollectionAsCapped = mongoTest "testCloneCollectionAsCapped" $ do
-  client <- getClient ()
-  srcCollection <- collection client "idris_mongo_test" "testCollection"
-  () <- insert srcCollection
-  destCollection <- collection client "idris_mongo_test" "clonedCollection"
-  Just () <- dropCollection destCollection
-  let cloneCollectionAsCappedCommand =
-    cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
-  concern <- writeConcern {wMajority = True}
-  Just opts <- writeConcernOptions concern
-  Right reply <- writeCommand client "idris_mongo_test"
-                   cloneCollectionAsCappedCommand opts
-    | Left (WriteCommandCException error) => do
+testCloneCollectionAsCapped = mongoTest "testCloneCollectionAsCapped" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    srcCollection <- collection client "idris_mongo_test" "testCollection"
+    () <- insert srcCollection
+    destCollection <- collection client "idris_mongo_test" "clonedCollection"
+    Just () <- dropCollection destCollection
+    let cloneCollectionAsCappedCommand =
+      cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
+    concern <- writeConcern {wMajority = True}
+    Just opts <- writeConcernOptions concern
+    Right reply <- writeCommand client "idris_mongo_test"
+      cloneCollectionAsCappedCommand opts
+      | Left (WriteCommandCException error) => do
         () <- putStrLn "WriteCommandCException"
         message <- errorMessage error
         () <- putStrLn message
         exitWith (ExitFailure (-1))
-    | Left BSonWriteCommandGenerationException => do
+      | Left BSonWriteCommandGenerationException => do
         () <- putStrLn "BSonCommandGenerationException"
         exitWith (ExitFailure (-1))
-  pure Success
+    pure Success
 
 testDistinct : IO ()
-testDistinct = mongoTest "testDistinct" $ do
-  client <- getClient ()
-  let query = MkDocument [
-    ("y", DocumentValue $ MkDocument [
-      ("$gt", UTF8Value "one")
-    ])
-  ]
-  let distinctCommand = distinct "testCollection" "hello" query
-  readPrefs <- readPreferences SECONDARY
-  concern <- readConcern {level = Just MAJORITY}
-  Just opts <- readConcernOptions concern (MkDocument [
-    ("collation", DocumentValue $ MkDocument [
-      ("locale", UTF8Value "en_US"),
-      ("caseFirst", UTF8Value "lower")
-    ])])
-    | Nothing => pure (Failure Nothing)
-  Right reply <- readCommand client "idris_mongo_test"
-    distinctCommand readPrefs opts
-    | Left error => do
-      errorMessage <- show error
-      pure $ Failure Nothing
-  pure Success
+testDistinct = mongoTest "testDistinct" procedure where
+  procedure : Client -> IO TestOutcome
+  procedure client = do
+    let query = MkDocument [
+      ("y", DocumentValue $ MkDocument [
+        ("$gt", UTF8Value "one")
+      ])
+    ]
+    let distinctCommand = distinct "testCollection" "hello" query
+    readPrefs <- readPreferences SECONDARY
+    concern <- readConcern {level = Just MAJORITY}
+    Just opts <- readConcernOptions concern (MkDocument [
+      ("collation", DocumentValue $ MkDocument [
+        ("locale", UTF8Value "en_US"),
+        ("caseFirst", UTF8Value "lower")
+      ])])
+      | Nothing => pure (Failure Nothing)
+    Right reply <- readCommand client "idris_mongo_test"
+      distinctCommand readPrefs opts
+      | Left error => do
+        errorMessage <- show error
+        pure $ Failure Nothing
+    pure Success
