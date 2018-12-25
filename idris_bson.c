@@ -20,8 +20,8 @@ CData idris_bson_new()
 }
 
 bool idris_bson_append_utf8(const CData bson_cdata,
-				                    const char * key,
-				                    const char * value)
+                            const char * key,
+                            const char * value)
 {
   return bson_append_utf8((bson_t *) bson_cdata->data, key, -1, value, -1);
 }
