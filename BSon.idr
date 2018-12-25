@@ -49,7 +49,7 @@ fromJSon jSon = do
   isError <- isCDataPtrNull cData
   case isError of
     True => pure Nothing
-    False => pure (Just $ MkBSon cData)
+    False => pure $ Just $ MkBSon cData
 
 canonicalExtendedJSon : BSon -> IO String
 canonicalExtendedJSon (MkBSon bSon) = do
