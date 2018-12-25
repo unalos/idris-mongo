@@ -53,12 +53,14 @@ fromJSon jSon = do
 
 canonicalExtendedJSon : BSon -> IO String
 canonicalExtendedJSon (MkBSon bSon) = do
-  MkRaw jSon <- foreign FFI_C "idris_bson_as_canonical_extended_json" (CData -> IO (Raw String)) bSon
+  MkRaw jSon <- foreign FFI_C "idris_bson_as_canonical_extended_json"
+    (CData -> IO (Raw String)) bSon
   pure jSon
 
 relaxedExtendedJSon : BSon -> IO String
 relaxedExtendedJSon (MkBSon bSon) = do
-  MkRaw jSon <- foreign FFI_C "idris_bson_as_relaxed_extended_json" (CData -> IO (Raw String)) bSon
+  MkRaw jSon <- foreign FFI_C "idris_bson_as_relaxed_extended_json"
+    (CData -> IO (Raw String)) bSon
   pure jSon
 
 export
