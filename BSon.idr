@@ -2,8 +2,8 @@ module BSon
 
 import Common
 
-%lib C "bson-1.0"
-%link C "idris_bson.o"
+%lib     C "bson-1.0"
+%link    C "idris_bson.o"
 %include C "idris_bson.h"
 
 %access export

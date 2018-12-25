@@ -8,8 +8,8 @@ import Mongo
 import Options
 import ReadPreferences
 
-%lib C "mongoc-1.0"
-%link C "idris_mongo_client.o"
+%lib     C "mongoc-1.0"
+%link    C "idris_mongo_client.o"
 %include C "idris_mongo_client.h"
 
 %access export

@@ -1,7 +1,7 @@
 module BSonError
 
-%lib C "bson-1.0"
-%link C "idris_mongo_bson_error.o"
+%lib     C "bson-1.0"
+%link    C "idris_mongo_bson_error.o"
 %include C "idris_mongo_bson_error.h"
 
 %access export
