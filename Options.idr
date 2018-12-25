@@ -25,7 +25,7 @@ writeConcernAppend (MkOptions options) (MkWriteConcern writeConcern) = do
 
 writeConcernOptions : WriteConcern -> IO (Maybe Options)
 writeConcernOptions writeConcern = do
-  MkBSon bSon <- bSon ()
+  let MkBSon bSon = bSon ()
   Just () <- writeConcernAppend (MkOptions bSon) writeConcern
     | Nothing => pure Nothing
   pure $ Just $ MkOptions bSon

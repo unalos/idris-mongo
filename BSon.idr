@@ -11,8 +11,8 @@ import Common
 public export
 data BSon = MkBSon CData
 
-bSon : () -> IO BSon
-bSon () = do
+bSon : () -> BSon
+bSon () = unsafePerformIO $ do
   cData <- foreign FFI_C "idris_bson_new" (IO CData)
   pure $ MkBSon cData
 
