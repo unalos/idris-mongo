@@ -79,12 +79,13 @@ simpleCommand : Client -> String -> Document -> IO (Maybe BSon)
 simpleCommand (MkClient client) dbName command = do
   Just (MkBSon bSonCommand) <- bSon command
     | Nothing => pure Nothing
-  reply <- foreign FFI_C "idris_mongoc_client_command_simple"
-    (CData -> String -> CData -> IO CData) client dbName bSonCommand
-  failure <- isCDataPtrNull reply
-  case failure of
-    True => pure Nothing
-    False => pure $ Just $ MkBSon reply
+  MkBSon bSonReply <- bSon ()
+  success <- foreign FFI_C "idris_mongoc_client_command_simple"
+    (CData -> String -> CData -> CData -> IO Int)
+    client dbName bSonCommand bSonReply
+  case success of
+    0 => pure Nothing
+    _ => pure $ Just $ MkBSon bSonReply
 
 public export
 data WriteCommandException =

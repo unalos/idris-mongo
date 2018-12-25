@@ -52,22 +52,17 @@ CData idris_mongoc_client_get_database(const CData clientCData,
   return cdata_manage(database, 0, idris_mongoc_database_finalizer);
 }
 
-CData idris_mongoc_client_command_simple(const CData client_cdata,
-                                         const char * db_name,
-                                         const CData command_cdata)
+int idris_mongoc_client_command_simple(const CData client_cdata,
+                                       const char * db_name,
+                                       const CData command_cdata,
+                                       const CData reply_cdata)
 {
   mongoc_client_t * client = (mongoc_client_t *) client_cdata->data;
   const bson_t * command = (const bson_t *) command_cdata->data;
-  bson_t * reply = bson_new();
-  const int success =
+  bson_t * reply = (bson_t *) reply_cdata->data;
+  return
     mongoc_client_command_simple(client, db_name, command, NULL, reply, NULL);
-  if (!success)
-    {
-      /* TODO: Check soundness of memory management. */
-      idris_bson_finalize(reply);
-      reply = NULL;
-    }
-  return idris_bson_manage(reply);
+
 }
 
 CData idris_mongoc_client_write_command_with_opts(const CData client_cdata,
