@@ -52,34 +52,6 @@ mutual
       append keyValues key value = (key, value)::keyValues
 
   private
-  iterValue : Iterator -> IO (Maybe Value)
-  iterValue iterator = do
-    typeCode <- iterType iterator
-    utf8 <- typeUTF8
-    document <- typeDocument
-    int32 <- typeInt32
-    int64 <- typeInt64
-    cond [
-      (typeCode == utf8, do
-        utf8Value <- iterUTF8 iterator
-        Just () <- UTF8Validate utf8Value
-          | Nothing => pure Nothing
-        pure $ Just (UTF8Value utf8Value)),
-      (typeCode == document, do
-        Just childIterator <- iterRecurse iterator
-          | Nothing => pure Nothing
-        Just document <- documentValue childIterator
-          | Nothing => pure Nothing
-        pure $ Just (DocumentValue document)),
-      (typeCode == int32, do
-        int32Value <- iterInt32 iterator
-        pure $ Just (Int32Value int32Value)),
-      (typeCode == int64, do
-        int64Value <- iterInt64 iterator
-        pure $ Just (Int64Value int64Value))
-    ] (pure Nothing)
-
-  private
   foldIterator : (acc -> String -> Value -> acc) -> acc
                  -> Iterator -> IO (Maybe acc)
   foldIterator func init iterator =
@@ -94,6 +66,47 @@ mutual
             key <- iterKey iterator
             Just value <- iterValue iterator
             aux iterator (func acc key value)
+
+  private
+  iterValue : Iterator -> IO (Maybe Value)
+  iterValue iterator = do
+      typeCode <- iterType iterator
+      utf8 <- typeUTF8
+      document <- typeDocument
+      int32 <- typeInt32
+      int64 <- typeInt64
+      cond [
+        (typeCode == utf8, extractUTF8 iterator),
+        (typeCode == document, extractDocument iterator),
+        (typeCode == int32, extractInt32 iterator),
+        (typeCode == int64, extractInt64 iterator)
+      ] (pure Nothing)
+    where
+
+      extractUTF8 : Iterator -> IO (Maybe Value)
+      extractUTF8 iterator = do
+        utf8Value <- iterUTF8 iterator
+        Just () <- UTF8Validate utf8Value
+          | Nothing => pure Nothing
+        pure $ Just (UTF8Value utf8Value)
+
+      extractDocument : Iterator -> IO (Maybe Value)
+      extractDocument iterator = do
+        Just childIterator <- iterRecurse iterator
+          | Nothing => pure Nothing
+        Just document <- documentValue childIterator
+          | Nothing => pure Nothing
+        pure $ Just (DocumentValue document)
+
+      extractInt32 : Iterator -> IO (Maybe Value)
+      extractInt32 iterator = do
+        int32Value <- iterInt32 iterator
+        pure $ Just (Int32Value int32Value)
+
+      extractInt64 : Iterator -> IO (Maybe Value)
+      extractInt64 iterator = do
+        int64Value <- iterInt64 iterator
+        pure $ Just (Int64Value int64Value)
 
 partial
 fold : (acc -> String -> Value -> acc) -> acc
