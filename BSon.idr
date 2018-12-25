@@ -76,15 +76,15 @@ iterInit bSon = do
   pure $ MkIterator cData bSon
 
 iterNext : Iterator -> IO Int
-iterNext (MkIterator iterator _) = do
+iterNext (MkIterator iterator _) =
   foreign FFI_C "idris_bson_iter_next" (CData -> IO Int) iterator
 
 iterKey : Iterator -> IO String
-iterKey (MkIterator iterator _) = do
+iterKey (MkIterator iterator _) =
   foreign FFI_C "idris_bson_iter_key" (CData -> IO String) iterator
 
 iterType : Iterator -> IO Int
-iterType (MkIterator iterator _) = do
+iterType (MkIterator iterator _) =
   foreign FFI_C "idris_bson_iter_type" (CData -> IO Int) iterator
 
 typeUTF8 : IO Int
