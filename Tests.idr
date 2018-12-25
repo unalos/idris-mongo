@@ -1,11 +1,14 @@
 module Tests
 
+import System
 import BSon
 import ISon
 import BSonError
 import Mongo
+import ReadPreferences
 import Command
 import WriteConcern
+import ReadConcern
 import Options
 import Client
 import Collection
@@ -109,26 +112,58 @@ testDropCollection = do
   client <- getClient ()
   collection <- collection client "idris_mongo_test" "testCollection"
   Just () <- dropCollection collection
-  pure ()
+  cleanUp ()
 
 testCloneCollectionAsCapped : IO ()
 testCloneCollectionAsCapped = do
   () <- Mongo.init ()
   client <- getClient ()
-  collection <- collection client "idris_mongo_test" "testCollection"
-  () <- insert collection
+  srcCollection <- collection client "idris_mongo_test" "testCollection"
+  () <- insert srcCollection
+  destCollection <- collection client "idris_mongo_test" "clonedCollection"
+  Just () <- dropCollection destCollection
   let cloneCollectionAsCappedCommand =
     cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
   concern <- writeConcern {wMajority = True}
-  Just opts <- options concern
+  Just opts <- writeConcernOptions concern
   Right reply <- writeCommand client "idris_mongo_test"
                    cloneCollectionAsCappedCommand opts
-    | Left (WriteCommandCException error) =>
-        do
-          () <- putStrLn "WriteCommandCException"
-          message <- errorMessage error
-          putStrLn message
-    | Left BSonCommandGenerationException =>
-        putStrLn "BSonCommandGenerationException"
+    | Left (WriteCommandCException error) => do
+        () <- putStrLn "WriteCommandCException"
+        let message = errorMessage error
+        () <- putStrLn message
+        exitWith (ExitFailure (-1))
+    | Left BSonWriteCommandGenerationException => do
+        () <- putStrLn "BSonCommandGenerationException"
+        exitWith (ExitFailure (-1))
   jSon <- canonicalExtendedJSon reply
-  putStrLn jSon
+  () <- putStrLn jSon
+  cleanUp ()
+
+failWith : String -> IO ()
+failWith message = do
+  () <- putStrLn message
+  exitWith (ExitFailure (-1))
+
+testDistinct : IO ()
+testDistinct = do
+  () <- Mongo.init ()
+  client <- getClient ()
+  let query = MkDocument [
+    ("y", DocumentValue $ MkDocument [
+      ("$gt", UTF8Value "one")
+    ])
+  ]
+  let distinctCommand = distinct "testCollection" "hello" query
+  readPrefs <- readPreferences SECONDARY
+  concern <- readConcern {level = Just MAJORITY}
+  Just opts <- readConcernOptions concern (MkDocument [
+    ("collation", DocumentValue $ MkDocument [
+      ("locale", UTF8Value "en_US"),
+      ("caseFirst", UTF8Value "lower")
+    ])])
+    | Nothing => failWith "Could not create read concern options"
+  Right reply <- readCommand client "idris_mongo_test"
+    distinctCommand readPrefs opts
+    | Left error => failWith (show error)
+  cleanUp ()

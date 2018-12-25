@@ -23,6 +23,16 @@ handleSuccessCode successIO = do
     0 => pure Nothing
     _ => pure $ Just ()
 
+appendUTF8 : BSon -> String -> String -> IO (Maybe ())
+appendUTF8 (MkBSon bSon) key value =
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_utf8"
+    (CData -> String -> String -> IO Int) bSon key value
+
+appendDocument : BSon -> String -> BSon -> IO (Maybe ())
+appendDocument (MkBSon bSon) key (MkBSon value) =
+  handleSuccessCode $ foreign FFI_C "idris_bson_append_document"
+    (CData -> String -> CData -> IO Int) bSon key value
+
 appendInt32 : BSon -> String -> Bits32 -> IO (Maybe ())
 appendInt32 (MkBSon bSon) key value =
   handleSuccessCode $ foreign FFI_C "idris_bson_append_int32"
@@ -32,11 +42,6 @@ appendInt64 : BSon -> String -> Bits64 -> IO (Maybe ())
 appendInt64 (MkBSon bSon) key value =
   handleSuccessCode $ foreign FFI_C "idris_bson_append_int64"
     (CData -> String -> Bits64 -> IO Int) bSon key value
-
-appendUTF8 : BSon -> String -> String -> IO (Maybe ())
-appendUTF8 (MkBSon bSon) key value =
-  handleSuccessCode $ foreign FFI_C "idris_bson_append_utf8"
-    (CData -> String -> String -> IO Int) bSon key value
 
 fromJSon : String -> IO (Maybe BSon)
 fromJSon jSon = do
@@ -56,98 +61,68 @@ relaxedExtendedJSon (MkBSon bSon) = do
   MkRaw jSon <- foreign FFI_C "idris_bson_as_relaxed_extended_json" (CData -> IO (Raw String)) bSon
   pure jSon
 
-private
-data Iterator = MkIterator CData
+export
+data Iterator = MkIterator CData BSon
+-- NOTE: We keep a reference to the BSon object on which we are iterating to
+-- keep garbage collection sound: we do not want the object on which we are
+-- iterating to be garbage collected before we have finished using the iterator.
 
-private
 iterInit : BSon -> IO Iterator
-iterInit (MkBSon bSon) = do
-  cData <- foreign FFI_C "idris_bson_iter_init" (CData -> IO CData) bSon
-  pure $ MkIterator cData
+iterInit bSon = do
+  let MkBSon bSonCData = bSon
+  cData <- foreign FFI_C "idris_bson_iter_init" (CData -> IO CData) bSonCData
+  pure $ MkIterator cData bSon
 
-private
 iterNext : Iterator -> IO Int
-iterNext (MkIterator iterator) = do
+iterNext (MkIterator iterator _) = do
   foreign FFI_C "idris_bson_iter_next" (CData -> IO Int) iterator
 
-private
 iterKey : Iterator -> IO String
-iterKey (MkIterator iterator) = do
+iterKey (MkIterator iterator _) = do
   foreign FFI_C "idris_bson_iter_key" (CData -> IO String) iterator
 
-private
 iterType : Iterator -> IO Int
-iterType (MkIterator iterator) = do
+iterType (MkIterator iterator _) = do
   foreign FFI_C "idris_bson_iter_type" (CData -> IO Int) iterator
 
-private
 typeUTF8 : IO Int
 typeUTF8 = foreign FFI_C "idris_bson_type_utf8" (IO Int)
 
-private
+typeDocument : IO Int
+typeDocument = foreign FFI_C "idris_bson_type_document" (IO Int)
+
 typeInt32 : IO Int
 typeInt32 = foreign FFI_C "idris_bson_type_int32" (IO Int)
 
-public export
-data Value : Type where
-  UTF8Value  : String -> Value
-  Int32Value : Bits32 -> Value
-  Int64Value : Bits64 -> Value
+typeInt64 : IO Int
+typeInt64 = foreign FFI_C "idris_bson_type_int64" (IO Int)
 
-Show Value where
-  show (UTF8Value string) = show string
-  show (Int32Value int32) = show int32
-
-private
 iterUTF8 : Iterator -> IO String
-iterUTF8 (MkIterator iterator) = do
-  MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8" (CData -> IO (Raw String)) iterator
+iterUTF8 (MkIterator iterator _) = do
+  MkRaw utf8 <- foreign FFI_C "idris_bson_iter_utf8"
+    (CData -> IO (Raw String)) iterator
   pure utf8
 
-private
 UTF8Validate : String -> IO (Maybe ())
 UTF8Validate string =
   handleSuccessCode $ foreign FFI_C "idris_bson_utf8_validate"
     (String -> IO Int) string
 
-private
+iterRecurse : Iterator -> IO (Maybe Iterator)
+iterRecurse (MkIterator iterator bSon) = do
+  childCData <- foreign FFI_C "idris_bson_iter_recurse"
+    (CData -> IO CData) iterator
+  isError <- isCDataPtrNull childCData
+  case isError of
+    True => pure Nothing
+    False => pure $ Just $ MkIterator childCData bSon
+
 iterInt32 : Iterator -> IO Bits32
-iterInt32 (MkIterator iterator) =
-  foreign FFI_C "idris_bson_iter_int32" (CData -> IO Bits32) iterator
+iterInt32 (MkIterator iterator _) =
+  foreign FFI_C "idris_bson_iter_int32"
+    (CData -> IO Bits32) iterator
 
-private
-cond : List (Lazy Bool, Lazy a) -> a -> a
-cond [] def = def
-cond ((x, y) :: xs) def = if x then y else cond xs def
-
-private
-iterValue : Iterator -> IO (Maybe Value)
-iterValue iterator = do
-  typeCode <- iterType iterator
-  utf8 <- typeUTF8
-  int32 <- typeInt32
-  cond [
-    (typeCode == utf8, do
-      utf8Value <- iterUTF8 iterator
-      Just () <- UTF8Validate utf8Value
-        | Nothing => pure Nothing
-      pure $ Just (UTF8Value utf8Value)),
-    (typeCode == int32, do
-      int32Value <- iterInt32 iterator
-      pure $ Just (Int32Value int32Value))
-  ] (pure Nothing)
-
-fold : (acc -> String -> Value -> acc) -> acc -> BSon -> IO (Maybe acc)
-fold func init bSon =
-  do iterator <- iterInit bSon
-     aux iterator init
-  where
-    aux : Iterator -> acc -> IO (Maybe acc)
-    aux iterator acc = do
-      code <- iterNext iterator
-      case code of
-        0 => pure $ Just acc
-        _ => do
-          key <- iterKey iterator
-          Just value <- iterValue iterator
-          aux iterator (func acc key value)
+iterInt64 : Iterator -> IO Bits64
+iterInt64 (MkIterator iterator _) =
+  foreign FFI_C "idris_bson_iter_int64"
+    (CData -> IO Bits64) iterator

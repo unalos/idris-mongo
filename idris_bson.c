@@ -1,6 +1,8 @@
 #include "idris_rts.h"
 #include <bson/bson.h>
 
+static void noop() {}
+
 void idris_bson_finalize(void * bson)
 {
   bson_destroy(bson);
@@ -17,25 +19,34 @@ const CData idris_bson_new()
   return idris_bson_manage(bson);
 }
 
-const bool idris_bson_append_int32(const CData bson,
+const bool idris_bson_append_utf8(const CData bson_cdata,
+				                          const char * key,
+				                          const char * value)
+{
+  return bson_append_utf8((bson_t *) bson_cdata->data, key, -1, value, -1);
+}
+
+const bool idris_bson_append_document(const CData bson_cdata,
+                                      const char * key,
+                                      const CData value_cdata)
+{
+  bson_t * bson = (bson_t *) bson_cdata->data;
+  const bson_t * value = (const bson_t *) value_cdata->data;
+  return bson_append_document(bson, key, -1, value);
+}
+
+const bool idris_bson_append_int32(const CData bson_cdata,
 				   const char * key,
 				   const int32_t value)
 {
-  return bson_append_int32((bson_t *) bson->data, key, -1, value);
+  return bson_append_int32((bson_t *) bson_cdata->data, key, -1, value);
 }
 
 const bool idris_bson_append_int64(const CData bson_cdata,
-				   const char * key,
-				   const int64_t value)
+				                           const char * key,
+				                           const int64_t value)
 {
   return bson_append_int64((bson_t *) bson_cdata->data, key, -1, value);
-}
-
-const bool idris_bson_append_utf8(const CData bson,
-				  const char * key,
-				  const char * value)
-{
-  return bson_append_utf8((bson_t *) bson->data, key, -1, value, -1);
 }
 
 const CData idris_bson_new_from_json(const char * json)
@@ -104,17 +115,19 @@ const int idris_bson_type_utf8()
   return (int) BSON_TYPE_UTF8;
 }
 
+const int idris_bson_type_document()
+{
+  return (int) BSON_TYPE_DOCUMENT;
+}
+
 const int idris_bson_type_int32()
 {
   return (int) BSON_TYPE_INT32;
 }
 
-const VAL idris_bson_iter_utf8(const CData iter)
+const int idris_bson_type_int64()
 {
-  uint32_t length;
-  const char * utf8 = bson_iter_utf8((const bson_iter_t *) iter->data, &length);
-  const VAL raw_utf8 = MKSTRlen(get_vm(), utf8, length);
-  return raw_utf8;
+  return (int) BSON_TYPE_INT64;
 }
 
 const bool idris_bson_utf8_validate(const char * utf8)
@@ -122,7 +135,33 @@ const bool idris_bson_utf8_validate(const char * utf8)
   return bson_utf8_validate(utf8, strlen(utf8) ,false);
 }
 
-const int idris_bson_iter_int32(const CData iter)
+const VAL idris_bson_iter_utf8(const CData iter_cdata)
 {
-  return bson_iter_int32((const bson_iter_t *) iter->data);
+  uint32_t length;
+  const bson_iter_t * iter = (const bson_iter_t *) iter_cdata->data;
+  const char * utf8 = bson_iter_utf8(iter, &length);
+  const VAL raw_utf8 = MKSTRlen(get_vm(), utf8, length);
+  return raw_utf8;
+}
+
+const CData idris_bson_iter_recurse(const CData iter_cdata) {
+  bson_iter_t * child;
+  const bson_iter_t * iter = (const bson_iter_t *) iter_cdata->data;
+  const bool success = bson_iter_recurse(iter, child);
+  if (!success)
+  {
+    return cdata_manage(NULL, 0, noop);
+  } else {
+    return idris_bson_iter_manage(child);
+  }
+}
+
+const int idris_bson_iter_int32(const CData iter_cdata)
+{
+  return bson_iter_int32((const bson_iter_t *) iter_cdata->data);
+}
+
+const int idris_bson_iter_int64(const CData iter_cdata)
+{
+  return bson_iter_int64((const bson_iter_t *) iter_cdata->data);
 }

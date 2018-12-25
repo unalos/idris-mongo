@@ -5,19 +5,22 @@ modules = Common
 	, ISon
 	, Command
 	, Mongo
+	, ReadPreferences
 	, WriteConcern
 	, Client
 	, Collection
 	, Tests
 
-objs = idris_common.o             , idris_common.h
-     , idris_bson.o               , idris_bson.h
-     , idris_mongo_bson_error.o   , idris_mongo_bson_error.h
-     , idris_mongo.o              , idris_mongo.h
-     , idris_mongo_write_concern.o, idris_mongo_write_concern.h
-     , idris_mongo_options.o      , idris_mongo_options.h
-     , idris_mongo_client.o       , idris_mongo_client.h
-     , idris_mongo_collection.o   , idris_mongo_collection.h
+objs = idris_common.o                , idris_common.h
+     , idris_bson.o                  , idris_bson.h
+     , idris_mongo_bson_error.o      , idris_mongo_bson_error.h
+     , idris_mongo.o                 , idris_mongo.h
+     , idris_mongo_write_concern.o   , idris_mongo_write_concern.h
+		 , idris_mongo_read_concern.o    , idris_mongo_read_concern.h
+		 , idris_mongo_read_preferences.o, idris_mongo_read_preferences.h
+     , idris_mongo_options.o         , idris_mongo_options.h
+     , idris_mongo_client.o          , idris_mongo_client.h
+     , idris_mongo_collection.o      , idris_mongo_collection.h
 
 makefile = binaries.make
 
@@ -29,3 +32,4 @@ tests = Tests.testBSonFromJSon
       , Tests.testInsertMany
       , Tests.testDropCollection
       , Tests.testCloneCollectionAsCapped
+      , Tests.testDistinct

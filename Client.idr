@@ -6,6 +6,7 @@ import BSon
 import ISon
 import Mongo
 import Options
+import ReadPreferences
 
 %lib C "mongoc-1.0"
 %link C "idris_mongo_client.o"
@@ -81,22 +82,48 @@ simpleCommand (MkClient client) db command = do
     False => pure $ Just $ MkBSon reply
 
 public export
-data Exception =
+data WriteCommandException =
     WriteCommandCException BSonError
-  | BSonCommandGenerationException
+  | BSonWriteCommandGenerationException
 
 writeCommand : Client -> String -> Document
-               -> Options -> IO (Either Exception BSon)
-writeCommand (MkClient client) db command (MkOptions options) = do
+               -> Options -> IO (Either WriteCommandException BSon)
+writeCommand (MkClient client) dbName command (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
-    | Nothing => pure (Left BSonCommandGenerationException)
+    | Nothing => pure (Left BSonWriteCommandGenerationException)
   MkBSonError errorPlaceholder <- newErrorPlaceholder ()
   reply <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
     (CData -> String -> CData -> CData -> CData -> IO CData)
-    client db bSonCommand options errorPlaceholder
+    client dbName bSonCommand options errorPlaceholder
   failure <- isCDataPtrNull reply
   case failure of
     True => pure $ Left (WriteCommandCException (MkBSonError errorPlaceholder))
+    False => pure $ Right $ MkBSon reply
+
+public export
+data ReadCommandException =
+    ReadCommandCException BSonError
+  | BSonReadCommandGenerationException
+
+Show ReadCommandException where
+  show (ReadCommandCException error) =
+    "ReadCommandCException: " ++ (show error)
+  show (BSonReadCommandGenerationException) =
+    "BSonReadCommandGenerationException"
+
+readCommand : Client -> String -> Document -> ReadPreferences
+              -> Options -> IO (Either ReadCommandException BSon)
+readCommand (MkClient client) dbName command
+  (MkReadPreferences readPreferences) (MkOptions options) = do
+  Just (MkBSon bSonCommand) <- bSon command
+    | Nothing => pure (Left BSonReadCommandGenerationException)
+  MkBSonError errorPlaceholder <- newErrorPlaceholder ()
+  reply <- foreign FFI_C "idris_mongoc_client_read_command_with_opts"
+    (CData -> String -> CData -> CData -> CData -> CData -> IO CData)
+    client dbName bSonCommand readPreferences options errorPlaceholder
+  failure <- isCDataPtrNull reply
+  case failure of
+    True => pure $ Left (ReadCommandCException (MkBSonError errorPlaceholder))
     False => pure $ Right $ MkBSon reply
 
 data DataBase = MkDataBase CData
