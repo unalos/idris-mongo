@@ -64,7 +64,8 @@ clientSetAppName (MkClient client) appName = do
     _ => pure $ Just ()
 
 
-client : URI -> {default VERSION_2 version : APIVersion} -> String -> IO (Maybe Client)
+client : URI -> {default VERSION_2 version : APIVersion}
+         -> String -> IO (Maybe Client)
 client uri {version} appName = do
   client <- mkClient uri
   success1 <- clientSetErrorAPI client version
