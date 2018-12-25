@@ -7,6 +7,7 @@ import BSon
 %include C "idris_mongo_write_concern.h"
 
 %access export
+%default covering
 
 public export
 data WriteConcern = MkWriteConcern CData
