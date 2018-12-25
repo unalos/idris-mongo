@@ -46,7 +46,7 @@ mutual
   documentValue iterator = do
       Just document <- foldIterator append [] iterator
         | Nothing => pure Nothing
-      pure $ Just $ MkDocument (reverse document)
+      pure $ Just $ MkDocument $ reverse document
     where
       append : List (String, Value) -> String -> Value -> List (String, Value)
       append keyValues key value = (key, value)::keyValues
