@@ -25,7 +25,9 @@ mkClient (MkURI uri) = do
   pure $ MkClient clientCData
 
 public export
-data APIVersion = VERSION_LEGACY | VERSION_2
+data APIVersion =
+    VERSION_LEGACY
+  | VERSION_2
 
 private
 apiVersionLegacy : IO Int
