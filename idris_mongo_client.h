@@ -24,6 +24,7 @@ CData idris_mongoc_client_write_command_with_opts(const CData client_cdata,
                                                   const char * db_name,
                                                   const CData command_cdata,
                                                   const CData options_cdata,
+																									const CData reply_cdata,
                                                   const CData error_cdata);
 
 CData idris_mongoc_client_read_command_with_opts(const CData client_cdata,
@@ -31,4 +32,5 @@ CData idris_mongoc_client_read_command_with_opts(const CData client_cdata,
                                                  const CData command_cdata,
                                                  const CData read_prefs_cdata,
                                                  const CData options_cdata,
+																								 const CData reply_cdata,
                                                  const CData error_cdata);

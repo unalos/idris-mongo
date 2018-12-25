@@ -97,14 +97,14 @@ writeCommand : Client -> String -> Document
 writeCommand (MkClient client) dbName command (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
     | Nothing => pure (Left BSonWriteCommandGenerationException)
+  MkBSon bSonReply <- bSon ()
   MkBSonError errorPlaceholder <- newErrorPlaceholder ()
-  reply <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
-    (CData -> String -> CData -> CData -> CData -> IO CData)
-    client dbName bSonCommand options errorPlaceholder
-  failure <- isCDataPtrNull reply
-  case failure of
-    True => pure $ Left $ WriteCommandCException $ MkBSonError errorPlaceholder
-    False => pure $ Right $ MkBSon reply
+  success <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
+    (CData -> String -> CData -> CData -> CData -> CData -> IO Int)
+    client dbName bSonCommand options bSonReply errorPlaceholder
+  case success of
+    0 => pure $ Left $ WriteCommandCException $ MkBSonError errorPlaceholder
+    _ => pure $ Right $ MkBSon bSonReply
 
 public export
 data ReadCommandException =
@@ -124,14 +124,14 @@ readCommand (MkClient client) dbName command
   (MkReadPreferences readPreferences) (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
     | Nothing => pure (Left BSonReadCommandGenerationException)
+  MkBSon bSonReply <- bSon ()
   MkBSonError errorPlaceholder <- newErrorPlaceholder ()
-  reply <- foreign FFI_C "idris_mongoc_client_read_command_with_opts"
-    (CData -> String -> CData -> CData -> CData -> CData -> IO CData)
-    client dbName bSonCommand readPreferences options errorPlaceholder
-  failure <- isCDataPtrNull reply
-  case failure of
-    True => pure $ Left $ ReadCommandCException $ MkBSonError errorPlaceholder
-    False => pure $ Right $ MkBSon reply
+  success <- foreign FFI_C "idris_mongoc_client_read_command_with_opts"
+    (CData -> String -> CData -> CData -> CData -> CData -> CData -> IO Int)
+    client dbName bSonCommand readPreferences options bSonReply errorPlaceholder
+  case success of
+    0 => pure $ Left $ ReadCommandCException $ MkBSonError errorPlaceholder
+    _ => pure $ Right $ MkBSon bSonReply
 
 data DataBase = MkDataBase CData
 

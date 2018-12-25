@@ -1,6 +1,5 @@
 #include "idris_rts.h"
 #include <mongoc/mongoc.h>
-#include "idris_bson_manage.h"
 
 static void idris_mongoc_collection_finalizer(void * collection) {
   mongoc_collection_destroy((mongoc_collection_t *) collection);

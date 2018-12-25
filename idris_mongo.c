@@ -1,6 +1,5 @@
 #include "idris_rts.h"
 #include <mongoc/mongoc.h>
-#include "idris_bson_manage.h"
 
 void idris_mongoc_init()
 {
