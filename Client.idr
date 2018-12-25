@@ -102,7 +102,7 @@ writeCommand (MkClient client) dbName command (MkOptions options) = do
     client dbName bSonCommand options errorPlaceholder
   failure <- isCDataPtrNull reply
   case failure of
-    True => pure $ Left (WriteCommandCException (MkBSonError errorPlaceholder))
+    True => pure $ Left $ WriteCommandCException $ MkBSonError errorPlaceholder
     False => pure $ Right $ MkBSon reply
 
 public export
@@ -129,7 +129,7 @@ readCommand (MkClient client) dbName command
     client dbName bSonCommand readPreferences options errorPlaceholder
   failure <- isCDataPtrNull reply
   case failure of
-    True => pure $ Left (ReadCommandCException (MkBSonError errorPlaceholder))
+    True => pure $ Left $ ReadCommandCException $ MkBSonError errorPlaceholder
     False => pure $ Right $ MkBSon reply
 
 data DataBase = MkDataBase CData
