@@ -10,6 +10,7 @@ import ReadConcern
 %include C "idris_mongo_options.h"
 
 %access export
+%default covering
 
 public export
 data Options = MkOptions CData
