@@ -42,7 +42,6 @@ readModeNearest = do
   code <- foreign FFI_C "idris_mongoc_read_mode_nearest" (IO Int)
   pure $ MkReadModeCode code
 
-total
 readMode : ReadMode -> IO ReadModeCode
 readMode PRIMARY             = readModePrimary
 readMode SECONDARY           = readModeSecondary
@@ -57,5 +56,6 @@ export
 readPreferences : ReadMode -> IO ReadPreferences
 readPreferences mode = do
   MkReadModeCode code <- readMode mode
-  preferences <- foreign FFI_C "idris_mongoc_read_prefs_new" (Int -> IO CData) code
+  preferences <- foreign FFI_C "idris_mongoc_read_prefs_new"
+    (Int -> IO CData) code
   pure $ MkReadPreferences preferences
