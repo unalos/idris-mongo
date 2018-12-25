@@ -21,10 +21,10 @@ mutual
 mutual
 
   Show Value where
-    show (UTF8Value string) = show string
+    show (UTF8Value string)       = show string
     show (DocumentValue document) = show document
-    show (Int32Value int32) = show int32
-    show (Int64Value int64) = show int64
+    show (Int32Value int32)       = show int32
+    show (Int64Value int64)       = show int64
 
   Show Document where
     show (MkDocument keyValues) = "{" ++ (aux "" True keyValues) ++ "}" where
