@@ -14,26 +14,77 @@ import Client
 import Collection
 
 %access export
+--%default covering
 
 private
 uriString : String
 uriString = "mongodb://localhost"
 
+private
+data TestOutcome =
+    Success
+  | Failure (Maybe String)
+
+private
+test : String -> IO TestOutcome -> IO ()
+test testName testProcedure = do
+  outcome <- testProcedure
+  case outcome of
+    Success =>
+      putStrLn ("Test " ++ testName ++ " passed.")
+    Failure Nothing => do
+      () <- putStrLn ("Test " ++ testName ++ " failed.")
+      exitWith (ExitFailure (-1))
+    Failure (Just message) => do
+      () <- putStrLn ("Test " ++ testName ++ " failed: " ++ message)
+      exitWith (ExitFailure (-1))
+
+--private
+--failWith : String -> IO ()
+--failWith message = do
+--  () <- putStrLn message
+--  exitWith (ExitFailure (-1))
+
+--private
+--succeedsWith : String -> IO ()
+--succeedsWith message = putStrLn message
+
+private
+assertJust : IO (Maybe t) -> IO TestOutcome
+assertJust expression = do
+  Just _ <- expression
+    | Nothing => pure (Failure Nothing)
+  pure Success
+
 testBSonFromJSon : IO ()
-testBSonFromJSon = do
-  Just _ <- fromJSon "{ \"hello\" : \"world\" }"
-  pure ()
+testBSonFromJSon = test "testBSonFromJSon" $ do
+  assertJust $ fromJSon "{ \"hello\" : \"world\" }"
 
 private
 document : Document
-document = MkDocument [("hello", UTF8Value "world")]
+document = MkDocument
+  [
+    ("String"     , UTF8Value "string"),
+    ("Int32"      , Int32Value 42),
+    ("Int64"      , Int64Value 42),
+    ("Subdocument", DocumentValue $ MkDocument
+      [
+        ("foo", UTF8Value "bar")
+      ])
+  ]
+
+private
+documentJSon : String
+documentJSon = "{ \"String\" : \"string\", \"Int32\" : 42, \"Int64\" : 42, \"Subdocument\" : { \"foo\" : \"bar\" } }"
 
 testRelaxedJSon : IO ()
-testRelaxedJSon = do
+testRelaxedJSon = test "testRelaxedJSon" $ do
   Just bSon <- bSon document
+    | Nothing => pure (Failure $ Just "bSon conversion failed.")
   jSon <- relaxedExtendedJSon bSon
-  let True = jSon == "{ \"hello\" : \"world\" }"
-  pure ()
+  case (jSon == documentJSon) of
+    True => pure Success
+    False => pure $ Failure $ Just jSon
 
 testCanonicalJSon : IO ()
 testCanonicalJSon = do
@@ -140,32 +191,27 @@ testCloneCollectionAsCapped = do
   () <- putStrLn jSon
   cleanUp ()
 
-failWith : String -> IO ()
-failWith message = do
-  () <- putStrLn message
-  exitWith (ExitFailure (-1))
-
-testDistinct : IO ()
-testDistinct = do
-  () <- Mongo.init ()
-  client <- getClient ()
-  let query = MkDocument [
-    ("y", DocumentValue $ MkDocument [
-      ("$gt", UTF8Value "one")
-    ])
-  ]
-  let distinctCommand = distinct "testCollection" "hello" query
-  readPrefs <- readPreferences SECONDARY
-  concern <- readConcern {level = Just MAJORITY}
-  Just opts <- readConcernOptions concern (MkDocument [
-    ("collation", DocumentValue $ MkDocument [
-      ("locale", UTF8Value "en_US"),
-      ("caseFirst", UTF8Value "lower")
-    ])])
-    | Nothing => failWith "Could not create read concern options"
-  Right reply <- readCommand client "idris_mongo_test"
-    distinctCommand readPrefs opts
-    | Left error => do
-      errorMessage <- show error
-      failWith errorMessage
-  cleanUp ()
+--testDistinct : IO ()
+--testDistinct = do
+--  () <- Mongo.init ()
+--  client <- getClient ()
+--  let query = MkDocument [
+--    ("y", DocumentValue $ MkDocument [
+--      ("$gt", UTF8Value "one")
+--    ])
+--  ]
+--  let distinctCommand = distinct "testCollection" "hello" query
+--  readPrefs <- readPreferences SECONDARY
+--  concern <- readConcern {level = Just MAJORITY}
+--  Just opts <- readConcernOptions concern (MkDocument [
+--    ("collation", DocumentValue $ MkDocument [
+--      ("locale", UTF8Value "en_US"),
+--      ("caseFirst", UTF8Value "lower")
+--    ])])
+--    | Nothing => failWith "Could not create read concern options"
+--  Right reply <- readCommand client "idris_mongo_test"
+--    distinctCommand readPrefs opts
+--    | Left error => do
+--      errorMessage <- show error
+--      failWith errorMessage
+--  cleanUp ()

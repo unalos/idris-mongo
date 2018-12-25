@@ -26,10 +26,11 @@ makefile = binaries.make
 
 tests = Tests.testBSonFromJSon
       , Tests.testRelaxedJSon
+			, Tests.testCanonicalJSon
       , Tests.testPing
       , Tests.testDataBase
       , Tests.testInsertCollection
       , Tests.testInsertMany
       , Tests.testDropCollection
       , Tests.testCloneCollectionAsCapped
-      , Tests.testDistinct
+--      , Tests.testDistinct
