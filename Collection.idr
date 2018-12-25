@@ -45,13 +45,15 @@ insertMany (MkCollection collection) documents =
     Just bSons <- auxToBSons (pure $ Just []) documents
       | Nothing => pure Nothing
     success <- foreign FFI_C "idris_mongoc_collection_insert_many"
-      (CData -> Raw (List BSon) -> Int -> IO Int) collection (MkRaw bSons) (size bSons)
+      (CData -> Raw (List BSon) -> Int -> IO Int)
+      collection (MkRaw bSons) (size bSons)
     case success of
       0 => pure Nothing
       _ => pure $ Just ()
   where
 
-    auxToBSons : IO (Maybe (List BSon)) -> List Document -> IO (Maybe (List BSon))
+    auxToBSons : IO (Maybe (List BSon)) -> List Document
+                 -> IO (Maybe (List BSon))
     auxToBSons bSonsIO (head::tail) = do
       Just bSons <- bSonsIO
         | Nothing => pure Nothing
