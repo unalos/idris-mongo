@@ -14,7 +14,7 @@ import Client
 import Collection
 
 %access export
---%default covering
+%default covering
 
 private
 uriString : String
@@ -181,6 +181,7 @@ testDropCollection = mongoTest "testDropCollection" procedure where
   procedure client = do
     collection <- collection client "idris_mongo_test" "testCollection"
     Just () <- dropCollection collection
+      | Nothing => pure (Failure Nothing)
     pure Success
 
 testCloneCollectionAsCapped : IO ()
