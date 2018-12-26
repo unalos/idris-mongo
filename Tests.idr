@@ -26,16 +26,23 @@ data TestOutcome =
   | Failure (Maybe String)
 
 private
-noop : IO ()
-noop = pure ()
+noopBefore : IO (Maybe ())
+noopBefore = pure $ Just ()
+
+private
+noopAfter : IO ()
+noopAfter = pure ()
 
 private
 test : String
-       -> {default noop before : Lazy (IO t)}
-       -> {default noop after : Lazy (IO ())}
+       -> {default noopBefore before : Lazy (IO (Maybe t))}
+       -> {default noopAfter after : Lazy (IO ())}
        -> (t -> IO TestOutcome) -> IO ()
 test testName {before} {after} testProcedure = do
-    initialized <- before
+    Just initialized <- before
+      | Nothing => do
+        () <- putStrLn ("Test " ++ testName ++ " failed: Setup failed.")
+        exitWith (ExitFailure (-1))
     outcome <- testProcedure initialized
     () <- after
     case outcome of
@@ -107,11 +114,13 @@ testCanonicalJSon = test "testCanonicalJSon" procedure where
     assertEquals jSon documentCanonicalJSon
 
 private
-getClient : () -> IO Client
+getClient : () -> IO (Maybe Client)
 getClient () = do
   Just uri <- uri uriString
+    | Nothing => pure Nothing
   Just client <- client uri "idris_mongo_test"
-  pure client
+    | Nothing => pure Nothing
+  pure $ Just client
 
 private
 mongoTest : String -> (Client -> IO TestOutcome) -> IO ()
