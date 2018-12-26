@@ -34,26 +34,28 @@ noopAfter : IO ()
 noopAfter = pure ()
 
 private
+failWith : String -> IO ()
+failWith message = do
+  () <- putStrLn message
+  exitWith (ExitFailure (-1))
+
+private
 test : String
        -> {default noopBefore before : Lazy (IO (Maybe t))}
        -> {default noopAfter after : Lazy (IO ())}
        -> (t -> IO TestOutcome) -> IO ()
 test testName {before} {after} testProcedure = do
     Just initialized <- before
-      | Nothing => do
-        () <- putStrLn ("Test " ++ testName ++ " failed: Setup failed.")
-        exitWith (ExitFailure (-1))
+      | Nothing => failWith ("Test " ++ testName ++ " failed: Setup failed.")
     outcome <- testProcedure initialized
     () <- after
     case outcome of
       Success =>
         putStrLn ("Test " ++ testName ++ " passed.")
-      Failure Nothing => do
-        () <- putStrLn ("Test " ++ testName ++ " failed.")
-        exitWith (ExitFailure (-1))
-      Failure (Just message) => do
-        () <- putStrLn ("Test " ++ testName ++ " failed: " ++ message)
-        exitWith (ExitFailure (-1))
+      Failure Nothing =>
+        failWith ("Test " ++ testName ++ " failed.")
+      Failure (Just message) =>
+        failWith ("Test " ++ testName ++ " failed: " ++ message)
 
 private
 assertJust : IO (Maybe t) -> IO TestOutcome
