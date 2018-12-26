@@ -26,10 +26,10 @@ import BSon
 ||| the replica set.
 public export
 data WriteConcernW =
-    W_DEFAULT |
-    W_UNACKNOWLEDGED |
-    W_MAJORITY |
-    W_NODES Int -- greater or equal than 2
+    W_DEFAULT
+  | W_UNACKNOWLEDGED
+  | W_MAJORITY
+  | W_NODES Int -- greater or equal than 2
 
 private
 writeConcernWDefaultCode : IO Int
