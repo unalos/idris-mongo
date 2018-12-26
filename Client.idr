@@ -92,18 +92,26 @@ data WriteCommandException =
     WriteCommandCException BSonError
   | BSonWriteCommandGenerationException
 
-writeCommand : Client -> String -> Document
-               -> Options -> IO (Either WriteCommandException BSon)
+||| Execute a command on the server, applying logic that is specific to commands
+||| that write, and taking the MongoDB server version into account.
+|||
+||| @ client A Mongo client.
+||| @ dataBaseName The name of the database to run the command on.
+||| @ command A `BSon` containing the command specification.
+||| @ options A `BSon` containing additional options.
+writeCommand : (client : Client) -> (dataBaseName : String)
+               -> (command : Document) -> (options : Options)
+               -> IO (Either WriteCommandException BSon)
 writeCommand (MkClient client) dbName command (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
     | Nothing => pure (Left BSonWriteCommandGenerationException)
   MkBSon bSonReply <- bSon ()
-  MkBSonError errorPlaceholder <- newErrorPlaceholder ()
+  MkBSonError errorPlaceHolder <- newErrorPlaceHolder ()
   success <- foreign FFI_C "idris_mongoc_client_write_command_with_opts"
     (CData -> String -> CData -> CData -> CData -> CData -> IO Int)
-    client dbName bSonCommand options bSonReply errorPlaceholder
+    client dbName bSonCommand options bSonReply errorPlaceHolder
   case success of
-    0 => pure $ Left $ WriteCommandCException $ MkBSonError errorPlaceholder
+    0 => pure $ Left $ WriteCommandCException $ MkBSonError errorPlaceHolder
     _ => pure $ Right $ MkBSon bSonReply
 
 public export
@@ -111,26 +119,38 @@ data ReadCommandException =
     ReadCommandCException BSonError
   | BSonReadCommandGenerationException
 
-show : ReadCommandException -> IO String
+||| Shows a read command exception.
+|||
+||| @ exception The read command exception.
+show : (exception : ReadCommandException) -> IO String
 show (ReadCommandCException error) = do
   errorMessage <- show error
   pure $ "ReadCommandCException: " ++ errorMessage
 show (BSonReadCommandGenerationException) =
   pure "BSonReadCommandGenerationException"
 
-readCommand : Client -> String -> Document -> ReadPreferences
-              -> Options -> IO (Either ReadCommandException BSon)
+||| Execute a command on the server, applying logic that is specific to commands
+||| that read, and taking the MongoDB server version into account.
+|||
+||| @ client A Mongo client.
+||| @ dataBaseName The name of the database to run the command on.
+||| @ command A `BSon` containing the command specification.
+||| @ readPreferences Read preferences.
+||| @ options A `BSon` containing additional options.
+readCommand : (client : Client) -> (dataBaseName : String)
+              -> (command : Document) -> (readPreferences : ReadPreferences)
+              -> (options : Options) -> IO (Either ReadCommandException BSon)
 readCommand (MkClient client) dbName command
   (MkReadPreferences readPreferences) (MkOptions options) = do
   Just (MkBSon bSonCommand) <- bSon command
     | Nothing => pure (Left BSonReadCommandGenerationException)
   MkBSon bSonReply <- bSon ()
-  MkBSonError errorPlaceholder <- newErrorPlaceholder ()
+  MkBSonError errorPlaceHolder <- newErrorPlaceHolder ()
   success <- foreign FFI_C "idris_mongoc_client_read_command_with_opts"
     (CData -> String -> CData -> CData -> CData -> CData -> CData -> IO Int)
-    client dbName bSonCommand readPreferences options bSonReply errorPlaceholder
+    client dbName bSonCommand readPreferences options bSonReply errorPlaceHolder
   case success of
-    0 => pure $ Left $ ReadCommandCException $ MkBSonError errorPlaceholder
+    0 => pure $ Left $ ReadCommandCException $ MkBSonError errorPlaceHolder
     _ => pure $ Right $ MkBSon bSonReply
 
 data DataBase = MkDataBase CData

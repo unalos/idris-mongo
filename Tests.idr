@@ -171,8 +171,8 @@ insert collection = do
   concern <- writeConcern
   Just options <- writeConcernOptions concern
     | Nothing => pure Nothing
-  Just () <- insertOne collection document options
-    | Nothing => pure Nothing
+  Right () <- insertOne collection document options
+    | Left _ => pure Nothing
   pure $ Just ()
 
 ||| Should successfully insert a document in a collection.

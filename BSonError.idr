@@ -13,10 +13,10 @@ data BSonError = MkBSonError CData
 |||
 ||| This is intended to be used by low-level binding code.
 ||| It is intended to be populated by C code with a given error.
-newErrorPlaceholder : () -> IO BSonError
-newErrorPlaceholder () = do
-  errorPlaceholder <- foreign FFI_C "idris_bson_error_new" (IO CData)
-  pure $ MkBSonError errorPlaceholder
+newErrorPlaceHolder : () -> IO BSonError
+newErrorPlaceHolder () = do
+  errorPlaceHolder <- foreign FFI_C "idris_bson_error_new" (IO CData)
+  pure $ MkBSonError errorPlaceHolder
 
 ||| Gets the BSon error code of a BSon error.
 |||

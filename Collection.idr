@@ -38,24 +38,34 @@ handleSuccessCode successIO = do
 ||| @ collection The collection to be dropped.
 dropCollection : (collection : Collection) -> IO (Either BSonError ())
 dropCollection (MkCollection collection) = do
-  MkBSonError errorPlaceholder <- newErrorPlaceholder ()
+  MkBSonError errorPlaceHolder <- newErrorPlaceHolder ()
   success <- foreign FFI_C "idris_mongoc_collection_drop_with_opts"
-    (CData -> CData -> IO Int) collection errorPlaceholder
+    (CData -> CData -> IO Int) collection errorPlaceHolder
   case success of
-    0 => pure $ Left $ MkBSonError errorPlaceholder
+    0 => pure $ Left $ MkBSonError errorPlaceHolder
     _ => pure $ Right ()
+
+||| Exception potentially raised by `insertOne`.
+data InsertOneException =
+    InsertOneCException BSonError
+  | DocumentGenerationException
 
 ||| Inserts a document in a collection.
 |||
 ||| @ collection The collection in which to insert.
 ||| @ document The document to insert.
 insertOne : (collection : Collection) -> (document: Document)
-            -> Options -> IO (Maybe ())
+            -> Options -> IO (Either InsertOneException ())
 insertOne (MkCollection collection) document (MkOptions options) = do
   Just (MkBSon bSonDocument) <- bSon document
-    | Nothing => pure Nothing
-  handleSuccessCode $ foreign FFI_C "idris_mongoc_collection_insert_one"
-    (CData -> CData -> CData -> IO Int) collection bSonDocument options
+    | Nothing => pure (Left DocumentGenerationException)
+  MkBSonError errorPlaceHolder <- newErrorPlaceHolder ()
+  success <- foreign FFI_C "idris_mongoc_collection_insert_one"
+    (CData -> CData -> CData -> CData -> IO Int)
+    collection bSonDocument options errorPlaceHolder
+  case success of
+    0 => pure $ Left $ InsertOneCException $ MkBSonError errorPlaceHolder
+    _ => pure $ Right ()
 
 insertMany : Collection -> List Document -> IO (Maybe ())
 insertMany (MkCollection collection) documents =
