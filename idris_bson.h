@@ -28,7 +28,7 @@ CData idris_bson_iter_init(const CData bson_cdata);
 
 bool idris_bson_iter_next(const CData iter_cdata);
 
-const char * idris_bson_iter_key(const CData iter_cdata);
+VAL idris_bson_iter_key(const CData iter_cdata);
 
 int idris_bson_iter_type(const CData iter_cdata);
 

@@ -81,8 +81,9 @@ iterNext (MkIterator iterator _) =
   foreign FFI_C "idris_bson_iter_next" (CData -> IO Int) iterator
 
 iterKey : Iterator -> IO String
-iterKey (MkIterator iterator _) =
-  foreign FFI_C "idris_bson_iter_key" (CData -> IO String) iterator
+iterKey (MkIterator iterator _) = do
+  MkRaw key <- foreign FFI_C "idris_bson_iter_key" (CData -> IO (Raw String)) iterator
+  pure key
 
 iterType : Iterator -> IO Int
 iterType (MkIterator iterator _) =
