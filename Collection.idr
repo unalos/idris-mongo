@@ -3,6 +3,7 @@ module Collection
 import Common
 import BSon
 import ISon
+import BSonError
 import Mongo
 import Client
 
@@ -29,12 +30,25 @@ handleSuccessCode successIO = do
     0 => pure Nothing
     _ => pure $ Just ()
 
-dropCollection : Collection -> IO (Maybe ())
+||| Drops a collection.
+|||
+||| If the collection does not exist, fails with error code 26.
+|||
+||| @ collection The collection to be dropped.
+dropCollection : (collection : Collection) -> IO (Either BSonError ())
 dropCollection (MkCollection collection) = do
-  handleSuccessCode $ foreign FFI_C "idris_mongoc_collection_drop_with_opts"
-    (CData -> IO Int) collection
+  MkBSonError errorPlaceholder <- newErrorPlaceholder ()
+  success <- foreign FFI_C "idris_mongoc_collection_drop_with_opts"
+    (CData -> CData -> IO Int) collection errorPlaceholder
+  case success of
+    0 => pure $ Left $ MkBSonError errorPlaceholder
+    _ => pure $ Right ()
 
-insertOne : Collection -> Document -> IO (Maybe ())
+||| Inserts a document in a collection.
+|||
+||| @ collection The collection in which to insert.
+||| @ document The document to insert.
+insertOne : (collection : Collection) -> (document: Document) -> IO (Maybe ())
 insertOne (MkCollection collection) document = do
   Just (MkBSon bSonDocument) <- bSon document
     | Nothing => pure Nothing

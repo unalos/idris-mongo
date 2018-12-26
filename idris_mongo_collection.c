@@ -15,11 +15,13 @@ CData idris_mongoc_client_get_collection(const CData client_cdata,
   return cdata_manage(collection, 0, idris_mongoc_collection_finalizer);
 }
 
-bool idris_mongoc_collection_drop_with_opts(const CData collection_cdata)
+bool idris_mongoc_collection_drop_with_opts(const CData collection_cdata,
+					    const CData error_cdata)
 {
   mongoc_collection_t * collection =
     (mongoc_collection_t *) collection_cdata->data;
-  return mongoc_collection_drop_with_opts(collection, NULL, NULL);
+  bson_error_t * error = (bson_error_t *) error_cdata->data;
+  return mongoc_collection_drop_with_opts(collection, NULL, error);
 }
 
 bool idris_mongoc_collection_insert_one(const CData collectionCData,

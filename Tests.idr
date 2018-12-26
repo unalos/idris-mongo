@@ -21,6 +21,10 @@ uriString : String
 uriString = "mongodb://localhost"
 
 private
+dataBaseName : String
+dataBaseName = "idris_mongo_test"
+
+private
 data TestOutcome =
     Success
   | Failure (Maybe String)
@@ -125,12 +129,20 @@ getClient () = do
   pure $ Just client
 
 private
-mongoTest : String -> (Client -> IO TestOutcome) -> IO ()
-mongoTest testName = test testName
+noop : Client -> IO (Maybe ())
+noop _ = pure $ Just ()
+
+private
+mongoTest : String -> {default noop setUp: Client -> IO (Maybe ())}
+            -> (Client -> IO TestOutcome) -> IO ()
+mongoTest testName {setUp} = test testName
   {before = (do
     () <- Mongo.init ()
-    client <- getClient ()
-    pure client)}
+    Just client <- getClient ()
+      | Nothing => pure Nothing
+    Just () <- setUp client
+      | Nothing => pure Nothing
+    pure $ Just client)}
   {after = cleanUp ()}
 
 private
@@ -150,7 +162,7 @@ testDataBase : IO ()
 testDataBase = mongoTest "testDataBase" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
-    dataBase <- dataBase client "idris_mongo_test"
+    dataBase <- dataBase client dataBaseName
     pure Success
 
 private
@@ -163,7 +175,7 @@ testInsertCollection : IO ()
 testInsertCollection = mongoTest "testInsertCollection" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
-    collection <- collection client "idris_mongo_test" "testCollection"
+    collection <- collection client dataBaseName "testCollection"
     () <- insert collection
     pure Success
 
@@ -171,32 +183,68 @@ testInsertMany : IO ()
 testInsertMany = mongoTest "testInsertMany" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
-    collection <- collection client "idris_mongo_test" "testCollection"
+    collection <- collection client dataBaseName "testCollection"
     Just () <- insertMany collection [document, document]
     pure Success
 
+private
+testDropCollectionSetUp : Client -> IO (Maybe ())
+testDropCollectionSetUp client = do
+  collection <- collection client dataBaseName "testCollection"
+  Just () <- insertOne collection document
+  pure $ Just ()
+
+||| Should successfully drop a collection.
 testDropCollection : IO ()
-testDropCollection = mongoTest "testDropCollection" procedure where
-  procedure : Client -> IO TestOutcome
-  procedure client = do
-    collection <- collection client "idris_mongo_test" "testCollection"
-    Just () <- dropCollection collection
-      | Nothing => pure (Failure Nothing)
-    pure Success
+testDropCollection =
+  mongoTest "testDropCollection" {setUp = testDropCollectionSetUp} procedure
+  where
+    procedure : Client -> IO TestOutcome
+    procedure client = do
+      collection <- collection client dataBaseName "testCollection"
+      Right () <- dropCollection collection
+        | Left _ => pure (Failure Nothing)
+      pure Success
+
+private
+testDropDropCollectionSetUp : Client -> IO (Maybe ())
+testDropDropCollectionSetUp client = do
+  collection <- collection client dataBaseName "testCollection"
+  Right () <- dropCollection collection
+    | Left error => do
+      code <- errorCode error
+      if 26 == code then pure (Just ()) else pure Nothing
+  pure $ Just ()
+
+||| Should fail with error code 26 when dropping an non existent collection.
+testDropDropCollection : IO ()
+testDropDropCollection =
+  mongoTest "testDropDropCollection" {setUp = testDropDropCollectionSetUp} procedure
+  where
+    procedure : Client -> IO TestOutcome
+    procedure client = do
+      collection <- collection client dataBaseName "testCollection"
+      Right () <- dropCollection collection
+        | Left error => do
+          code <- errorCode error
+          if 26 == code
+            then pure Success
+            else pure (Failure Nothing)
+      pure Success
 
 testCloneCollectionAsCapped : IO ()
 testCloneCollectionAsCapped = mongoTest "testCloneCollectionAsCapped" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
-    srcCollection <- collection client "idris_mongo_test" "testCollection"
+    srcCollection <- collection client dataBaseName "testCollection"
     () <- insert srcCollection
-    destCollection <- collection client "idris_mongo_test" "clonedCollection"
-    Just () <- dropCollection destCollection
+    destCollection <- collection client dataBaseName "clonedCollection"
+    Right () <- dropCollection destCollection
     let cloneCollectionAsCappedCommand =
       cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
     concern <- writeConcern {wMajority = True}
     Just opts <- writeConcernOptions concern
-    Right reply <- writeCommand client "idris_mongo_test"
+    Right reply <- writeCommand client dataBaseName
       cloneCollectionAsCappedCommand opts
       | Left (WriteCommandCException error) => do
         () <- putStrLn "WriteCommandCException"
@@ -226,7 +274,7 @@ testDistinct = mongoTest "testDistinct" procedure where
         ("caseFirst", UTF8Value "lower")
       ])])
       | Nothing => pure (Failure Nothing)
-    Right reply <- readCommand client "idris_mongo_test"
+    Right reply <- readCommand client dataBaseName
       distinctCommand readPrefs opts
       | Left error => do
         errorMessage <- show error

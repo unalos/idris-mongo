@@ -13,6 +13,12 @@ CData idris_bson_error_new()
   return cdata_manage(bson_error, size, idris_bson_error_finalize);
 }
 
+int idris_bson_error_code(const CData error_cdata)
+{
+  const bson_error_t * error = (const bson_error_t *) error_cdata->data;
+  return error->code;
+}
+
 VAL idris_bson_error_message(const CData error_cdata)
 {
   const bson_error_t * error = (const bson_error_t *) error_cdata->data;

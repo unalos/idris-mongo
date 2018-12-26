@@ -32,5 +32,6 @@ tests = Tests.testBSonFromJSon
       , Tests.testInsertCollection
       , Tests.testInsertMany
       , Tests.testDropCollection
+      , Tests.testDropDropCollection
       , Tests.testCloneCollectionAsCapped
       , Tests.testDistinct
