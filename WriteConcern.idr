@@ -10,22 +10,26 @@ import BSon
 %default covering
 
 ||| Write concern level.
+|||
+||| W_DEFAULT: By default, writes block awaiting acknowledgement from MongoDB.
+||| Acknowledged write concern allows clients to catch network, duplicate key,
+||| and other errors.
+|||
+||| W_UNACKNOWLEDGED: With this write concern, MongoDB does not acknowledge the
+||| receipt of write operation. Unacknowledged is similar to errors ignored;
+||| however, mongoc attempts to receive and handle network errors when possible.
+|||
+||| W_MAJORITY: Block until a write has been propagated to a majority of the
+||| nodes in the replica set.
+|||
+||| W_NODES n: Block until a write has been propagated to at least n nodes in
+||| the replica set.
 public export
 data WriteConcernW =
-  ||| By default, writes block awaiting acknowledgement from MongoDB.
-  ||| Acknowledged write concern allows clients to catch network, duplicate key,
-  ||| and other errors.
-    W_DEFAULT
-  ||| With this write concern, MongoDB does not acknowledge the receipt of write
-  ||| operation. Unacknowledged is similar to errors ignored; however, mongoc
-  ||| attempts to receive and handle network errors when possible.
-  | W_UNACKNOWLEDGED
-  ||| Block until a write has been propagated to a majority of the nodes in the
-  ||| replica set.
-  | W_MAJORITY
-  ||| Block until a write has been propagated to at least n nodes in the replica
-  ||| set.
-  | W_NODES Int -- greater or equal than 2
+    W_DEFAULT |
+    W_UNACKNOWLEDGED |
+    W_MAJORITY |
+    W_NODES Int -- greater or equal than 2
 
 private
 writeConcernWDefaultCode : IO Int
