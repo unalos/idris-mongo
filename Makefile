@@ -1,7 +1,7 @@
 IDRIS=idris
 IDRIS_PKG=mongo.ipkg
 
-IDRIS_CFLAGS=-Werror
+IDRIS_CFLAGS=-Wignored-qualifiers -Werror
 
 export IDRIS_CFLAGS
 

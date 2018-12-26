@@ -10,4 +10,4 @@ int idris_mongoc_read_mode_secondary_preferred();
 
 int idris_mongoc_read_mode_nearest();
 
-const CData idris_mongoc_read_prefs_new(int read_mode);
+CData idris_mongoc_read_prefs_new(int read_mode);

@@ -1,12 +1,12 @@
 #include "idris_rts.h"
 
-const CData idris_mongoc_client_new_from_uri(const CData uri_cdata);
+CData idris_mongoc_client_new_from_uri(const CData uri_cdata);
 
-const int idris_mongoc_error_api_version_legacy();
+int idris_mongoc_error_api_version_legacy();
 
-const int idris_mongoc_error_api_version_2();
+int idris_mongoc_error_api_version_2();
 
-const int idris_mongoc_client_set_error_api(const CData client_cdata,
+int idris_mongoc_client_set_error_api(const CData client_cdata,
 					    const int version);
 
 int idris_mongoc_client_set_appname(const CData client,

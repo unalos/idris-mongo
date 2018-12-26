@@ -104,6 +104,7 @@ bool idris_bson_iter_next(const CData iter)
 
 const char * idris_bson_iter_key(const CData iter)
 {
+  // TODO: Should not return a const char * ! Use MKSTR
   return bson_iter_key((const bson_iter_t *) iter->data);
 }
 
