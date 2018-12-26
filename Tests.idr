@@ -166,14 +166,19 @@ testDataBase = mongoTest "testDataBase" procedure where
     pure Success
 
 private
-insert : Collection -> IO (Maybe ())
+data InsertException =
+    OptionsGenerationException
+  | MkInsertException InsertOneException
+
+private
+insert : Collection -> IO (Either InsertException ())
 insert collection = do
   concern <- writeConcern
   Just options <- writeConcernOptions concern
-    | Nothing => pure Nothing
+    | Nothing => pure (Left OptionsGenerationException)
   Right () <- insertOne collection document options
-    | Left _ => pure Nothing
-  pure $ Just ()
+    | Left exception => pure (Left $ MkInsertException exception)
+  pure $ Right ()
 
 ||| Should successfully insert a document in a collection.
 testInsertCollection : IO ()
@@ -181,7 +186,14 @@ testInsertCollection = mongoTest "testInsertCollection" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
     collection <- collection client dataBaseName "testCollection"
-    Just () <- insert collection
+    Right () <- insert collection
+      | Left OptionsGenerationException =>
+        pure (Failure $ Just "Could not generate options.")
+      | Left (MkInsertException DocumentGenerationException) =>
+        pure (Failure $ Just "Failed to pass document as argument.")
+      | Left (MkInsertException (InsertOneCException error)) => do
+        message <- show error
+        pure (Failure $ Just message)
     pure Success
 
 testInsertMany : IO ()
@@ -196,7 +208,7 @@ private
 testDropCollectionSetUp : Client -> IO (Maybe ())
 testDropCollectionSetUp client = do
   collection <- collection client dataBaseName "testCollection"
-  Just () <- insert collection
+  Right () <- insert collection
   pure $ Just ()
 
 ||| Should successfully drop a collection.
@@ -243,7 +255,7 @@ testCloneCollectionAsCapped = mongoTest "testCloneCollectionAsCapped" procedure 
   procedure : Client -> IO TestOutcome
   procedure client = do
     srcCollection <- collection client dataBaseName "testCollection"
-    Just () <- insert srcCollection
+    Right () <- insert srcCollection
     destCollection <- collection client dataBaseName "clonedCollection"
     Right () <- dropCollection destCollection
     let cloneCollectionAsCappedCommand =

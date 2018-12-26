@@ -31,5 +31,11 @@ errorMessage (MkBSonError error) = do
     (CData -> IO (Raw String)) error
   pure message
 
-show : BSonError -> IO String
-show error = errorMessage error
+||| Shows a `BSonError`.
+|||
+||| @ error The error to show.
+show : (error : BSonError) -> IO String
+show error = do
+  code <- errorCode error
+  message <- errorMessage error
+  pure $ (show code) ++ ": " ++ message

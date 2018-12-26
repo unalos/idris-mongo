@@ -46,6 +46,12 @@ dropCollection (MkCollection collection) = do
     _ => pure $ Right ()
 
 ||| Exception potentially raised by `insertOne`.
+|||
+||| InsertOneCException: `BSonError` raised by `insertOne`.
+|||
+||| DocumentGenerationException: Raised when failed to pass the document as
+||| argument to `insertOne`.
+public export
 data InsertOneException =
     InsertOneCException BSonError
   | DocumentGenerationException
