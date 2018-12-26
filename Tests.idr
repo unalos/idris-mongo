@@ -166,17 +166,22 @@ testDataBase = mongoTest "testDataBase" procedure where
     pure Success
 
 private
-insert : Collection -> IO ()
+insert : Collection -> IO (Maybe ())
 insert collection = do
-  Just () <- insertOne collection document
-  pure ()
+  concern <- writeConcern
+  Just options <- writeConcernOptions concern
+    | Nothing => pure Nothing
+  Just () <- insertOne collection document options
+    | Nothing => pure Nothing
+  pure $ Just ()
 
+||| Should successfully insert a document in a collection.
 testInsertCollection : IO ()
 testInsertCollection = mongoTest "testInsertCollection" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
     collection <- collection client dataBaseName "testCollection"
-    () <- insert collection
+    Just () <- insert collection
     pure Success
 
 testInsertMany : IO ()
@@ -191,7 +196,7 @@ private
 testDropCollectionSetUp : Client -> IO (Maybe ())
 testDropCollectionSetUp client = do
   collection <- collection client dataBaseName "testCollection"
-  Just () <- insertOne collection document
+  Just () <- insert collection
   pure $ Just ()
 
 ||| Should successfully drop a collection.
@@ -232,17 +237,18 @@ testDropDropCollection =
             else pure (Failure Nothing)
       pure Success
 
+||| Should successfully clone a collection as a capped collection.
 testCloneCollectionAsCapped : IO ()
 testCloneCollectionAsCapped = mongoTest "testCloneCollectionAsCapped" procedure where
   procedure : Client -> IO TestOutcome
   procedure client = do
     srcCollection <- collection client dataBaseName "testCollection"
-    () <- insert srcCollection
+    Just () <- insert srcCollection
     destCollection <- collection client dataBaseName "clonedCollection"
     Right () <- dropCollection destCollection
     let cloneCollectionAsCappedCommand =
       cloneCollectionAsCapped "testCollection" "clonedCollection" (1024 * 1024)
-    concern <- writeConcern {wMajority = True}
+    concern <- writeConcern {w = W_MAJORITY}
     Just opts <- writeConcernOptions concern
     Right reply <- writeCommand client dataBaseName
       cloneCollectionAsCappedCommand opts

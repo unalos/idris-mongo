@@ -24,13 +24,15 @@ bool idris_mongoc_collection_drop_with_opts(const CData collection_cdata,
   return mongoc_collection_drop_with_opts(collection, NULL, error);
 }
 
-bool idris_mongoc_collection_insert_one(const CData collectionCData,
-                                        const CData documentCData)
+bool idris_mongoc_collection_insert_one(const CData collection_cdata,
+                                        const CData document_cdata,
+					const CData options_cdata)
 {
   mongoc_collection_t * collection =
-    (mongoc_collection_t *) collectionCData->data;
-  bson_t * document = (bson_t *) documentCData->data;
-  return mongoc_collection_insert_one(collection, document, NULL, NULL, NULL);
+    (mongoc_collection_t *) collection_cdata->data;
+  const bson_t * document = (const bson_t *) document_cdata->data;
+  const bson_t * options = (const bson_t *) options_cdata->data;
+  return mongoc_collection_insert_one(collection, document, options, NULL, NULL);
 }
 
 bool idris_mongoc_collection_insert_many(const CData collection_cdata,

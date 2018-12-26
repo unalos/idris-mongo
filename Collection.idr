@@ -6,6 +6,7 @@ import ISon
 import BSonError
 import Mongo
 import Client
+import Options
 
 %lib     C "mongoc-1.0"
 %link    C "idris_mongo_collection.o"
@@ -48,12 +49,13 @@ dropCollection (MkCollection collection) = do
 |||
 ||| @ collection The collection in which to insert.
 ||| @ document The document to insert.
-insertOne : (collection : Collection) -> (document: Document) -> IO (Maybe ())
-insertOne (MkCollection collection) document = do
+insertOne : (collection : Collection) -> (document: Document)
+            -> Options -> IO (Maybe ())
+insertOne (MkCollection collection) document (MkOptions options) = do
   Just (MkBSon bSonDocument) <- bSon document
     | Nothing => pure Nothing
   handleSuccessCode $ foreign FFI_C "idris_mongoc_collection_insert_one"
-    (CData -> CData -> IO Int) collection bSonDocument
+    (CData -> CData -> CData -> IO Int) collection bSonDocument options
 
 insertMany : Collection -> List Document -> IO (Maybe ())
 insertMany (MkCollection collection) documents =
