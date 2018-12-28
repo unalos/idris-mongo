@@ -62,10 +62,12 @@ test testName {before} {after} testProcedure = do
         failWith ("Test " ++ testName ++ " failed: " ++ message)
 
 private
-assertJust : IO (Maybe t) -> IO TestOutcome
-assertJust expression = do
-  Just _ <- expression
-    | Nothing => pure (Failure Nothing)
+assertRight : IO (Either BSonError right) -> IO TestOutcome
+assertRight expression = do
+  Right _ <- expression
+    | Left error => do
+      message <- show error
+      pure (Failure $ Just message)
   pure Success
 
 private
@@ -75,11 +77,12 @@ assertEquals x y =
     True => pure Success
     False => pure $ Failure $ Just ((show x) ++ " does not equal " ++ (show y))
 
+||| Tests conversion of JSon to BSon.
 testBSonFromJSon : IO ()
 testBSonFromJSon = test "testBSonFromJSon" procedure where
   procedure : () -> IO TestOutcome
   procedure () = do
-    assertJust $ fromJSon "{ \"hello\" : \"world\" }"
+    assertRight $ fromJSon "{ \"hello\" : \"world\" }"
 
 private
 document : Document

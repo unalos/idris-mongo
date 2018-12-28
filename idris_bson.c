@@ -49,10 +49,16 @@ bool idris_bson_append_int64(const CData bson_cdata,
   return bson_append_int64((bson_t *) bson_cdata->data, key, -1, value);
 }
 
-CData idris_bson_new_from_json(const char * json)
+CData idris_bson_new_from_json(const char * json,
+			       const CData error_cdata)
 {
-  bson_t * bson = bson_new_from_json((const uint8_t *) json, -1, NULL);
-  return cdata_manage(bson, sizeof(bson_t), idris_bson_finalize);
+  bson_error_t * error = (bson_error_t *) error_cdata->data;
+  bson_t * bson = bson_new_from_json((const uint8_t *) json, -1, error);
+  if (NULL == bson) {
+    return cdata_manage(NULL, 0, noop);
+  } else {
+    return cdata_manage(bson, sizeof(bson_t), idris_bson_finalize);
+  }
 }
 
 VAL idris_bson_as_canonical_extended_json(const CData bson)

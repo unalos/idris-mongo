@@ -1,6 +1,7 @@
 module BSon
 
 import Common
+import BSonError
 
 %lib     C "bson-1.0"
 %link    C "idris_bson.o"
@@ -44,13 +45,18 @@ appendInt64 (MkBSon bSon) key value =
   handleSuccessCode $ foreign FFI_C "idris_bson_append_int64"
     (CData -> String -> Bits64 -> IO Int) bSon key value
 
-fromJSon : String -> IO (Maybe BSon)
+||| Converts a JSon string to a BSon.
+|||
+||| @ jSon The JSon string.
+fromJSon : (jSon : String) -> IO (Either BSonError BSon)
 fromJSon jSon = do
-  cData <- foreign FFI_C "idris_bson_new_from_json" (String -> IO CData) jSon
+  MkBSonError errorPlaceHolder <- newErrorPlaceHolder ()
+  cData <- foreign FFI_C "idris_bson_new_from_json"
+    (String -> CData -> IO CData) jSon errorPlaceHolder
   isError <- isCDataPtrNull cData
   case isError of
-    True => pure Nothing
-    False => pure $ Just $ MkBSon cData
+    True => pure $ Left $ MkBSonError errorPlaceHolder
+    False => pure $ Right $ MkBSon cData
 
 canonicalExtendedJSon : BSon -> IO String
 canonicalExtendedJSon (MkBSon bSon) = do

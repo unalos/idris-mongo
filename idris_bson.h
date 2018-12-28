@@ -3,22 +3,23 @@
 CData idris_bson_new();
 
 bool idris_bson_append_utf8(const CData bson_cdata,
-                                  const char * key,
-                                  const char * value);
+			    const char * key,
+			    const char * value);
 
 bool idris_bson_append_document(const CData bson_cdata,
-                                      const char * key,
-                                      const CData value_cdata);
+				const char * key,
+				const CData value_cdata);
 
 bool idris_bson_append_int32(const CData bson_cdata,
-                                   const char * key,
-                                   const int32_t value);
+			     const char * key,
+			     const int32_t value);
 
 bool idris_bson_append_int64(const CData bson_cdata,
-                                   const char * key,
-                                   const int64_t value);
+			     const char * key,
+			     const int64_t value);
 
-CData idris_bson_new_from_json(const char * json);
+CData idris_bson_new_from_json(const char * json,
+			       const CData error);
 
 VAL idris_bson_as_canonical_extended_json(const CData bson_cdata);
 
