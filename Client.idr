@@ -25,6 +25,13 @@ mkClient (MkURI uri) = do
     (CData -> IO CData) uri
   pure $ MkClient clientCData
 
+||| API version for error domain and error codes.
+|||
+||| ONLY ERROR API VERSION 2 IS SUPPORTED!
+|||
+||| The version 2 API has been designed to work around a design flaw in the
+||| legacy version, where error codes from the client side and the server side
+||| overlapped and conflicted.
 public export
 data APIVersion =
     VERSION_LEGACY

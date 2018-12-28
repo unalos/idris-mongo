@@ -35,7 +35,7 @@ mutual
       aux accu _ [] = accu
 
 private
-cond : List (Lazy Bool, Lazy a) -> a -> a
+cond : List (Lazy Bool, Lazy a) -> Lazy a -> a
 cond [] def = def
 cond ((x, y) :: xs) def = if x then y else cond xs def
 
